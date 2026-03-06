@@ -2,7 +2,7 @@ import Combine
 import SwiftUI
 import Swinject
 
-enum MessageType {
+enum AlertMessageType {
     case info
     case warning
     case errorPump
@@ -10,7 +10,7 @@ enum MessageType {
 
 struct MessageContent {
     var content: String
-    var type: MessageType = .info
+    var type: AlertMessageType = .info
 }
 
 protocol Router {

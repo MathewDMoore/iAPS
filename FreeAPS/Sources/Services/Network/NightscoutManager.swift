@@ -229,7 +229,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
                     info(
                         .nightscout,
                         "Deletion of carbs in NightScout not done \n \(error.localizedDescription)",
-                        type: MessageType.warning
+                        type: AlertMessageType.warning
                     )
                 }
             } receiveValue: { _ in }
@@ -251,7 +251,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
                     info(
                         .nightscout,
                         "Deletion of Announcements not possible \(error.localizedDescription)",
-                        type: MessageType.warning
+                        type: AlertMessageType.warning
                     )
                 }
             } receiveValue: { _ in }

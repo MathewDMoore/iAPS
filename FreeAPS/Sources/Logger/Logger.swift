@@ -28,7 +28,7 @@ func debug(
 func info(
     _ category: Logger.Category,
     _ message: String,
-    type: MessageType = .info,
+    type: AlertMessageType = .info,
     file: String = #file,
     function: String = #function,
     line: UInt = #line
@@ -229,7 +229,7 @@ final class Logger {
 
     func info(
         _ message: String,
-        type: MessageType = .info,
+        type: AlertMessageType = .info,
         file: String = #file,
         function: String = #function,
         line: UInt = #line
@@ -274,7 +274,7 @@ final class Logger {
         )
     }
 
-    private func showAlert(_ message: String, type: MessageType = .info) {
+    private func showAlert(_ message: String, type: AlertMessageType = .info) {
         DispatchQueue.main.async {
             let messageCont = MessageContent(content: message, type: type)
             router.alertMessage.send(messageCont)

@@ -828,7 +828,7 @@ extension BaseDeviceDataManager: AlertObserver {
     }
 
     private func ackAlert(alert: AlertEntry) {
-        let typeMessage: MessageType
+        let typeMessage: AlertMessageType
         let alertUp = alert.alertIdentifier.uppercased()
         if alertUp.contains("FAULT") || alertUp.contains("ERROR") {
             typeMessage = .errorPump
