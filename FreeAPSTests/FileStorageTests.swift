@@ -17,3 +17,35 @@ class FileStorageTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 }
+
+final class PumpViewTests: XCTestCase {
+    func testFallbackPumpLabel_OmniOnboarded_ShowsPod() {
+        let label = PumpView.fallbackPumpLabel(
+            pumpName: "Omnipod DASH",
+            isOnboarded: true,
+            hasExpirationDate: false,
+            hasReservoir: false
+        )
+        XCTAssertEqual(label, "Pod")
+    }
+
+    func testFallbackPumpLabel_OmniNotOnboarded_ShowsNoPod() {
+        let label = PumpView.fallbackPumpLabel(
+            pumpName: "Omnipod DASH",
+            isOnboarded: false,
+            hasExpirationDate: false,
+            hasReservoir: false
+        )
+        XCTAssertEqual(label, "No Pod")
+    }
+
+    func testFallbackPumpLabel_WithExpiration_ShowsNoFallback() {
+        let label = PumpView.fallbackPumpLabel(
+            pumpName: "Omnipod DASH",
+            isOnboarded: true,
+            hasExpirationDate: true,
+            hasReservoir: true
+        )
+        XCTAssertNil(label)
+    }
+}

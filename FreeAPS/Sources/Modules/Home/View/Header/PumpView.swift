@@ -42,8 +42,30 @@ struct PumpView: View {
         entity: InsulinConcentration.entity(), sortDescriptors: [NSSortDescriptor(key: "date", ascending: true)]
     ) var concentration: FetchedResults<InsulinConcentration>
 
+    static func fallbackPumpLabel(
+        pumpName: String,
+        isOnboarded: Bool,
+        hasExpirationDate: Bool,
+        hasReservoir: Bool
+    ) -> String? {
+        if hasExpirationDate {
+            return nil
+        }
+        if pumpName.contains("Omni") {
+            return isOnboarded ? "Pod" : "No Pod"
+        }
+        if pumpName.contains("Medtrum") {
+            return "No Patch"
+        }
+        if hasReservoir {
+            return nil
+        }
+        return "No Pump"
+    }
+
     var body: some View {
         let nano = state.pumpName.contains("Medtrum")
+        let isPumpOnboarded = state.deviceDataManager.pumpManager?.isOnboarded ?? false
         // let sim = state.pumpName.contains("Simulator") // Just For Testing
         HStack(spacing: 5) {
             // OmniPods and Medtrum nanos
@@ -142,15 +164,15 @@ struct PumpView: View {
                     remainingTime(time: date.timeIntervalSince(timerDate))
                         .font(.pumpFont)
                         .offset(x: nano ? -7 : -5)
-                } else if state.pumpName.contains("Omni") {
-                    Text("No Pod").font(.statusFont).foregroundStyle(.secondary)
+                } else if let fallbackLabel = Self.fallbackPumpLabel(
+                    pumpName: state.pumpName,
+                    isOnboarded: isPumpOnboarded,
+                    hasExpirationDate: expiresAtDate != nil,
+                    hasReservoir: reservoir != nil
+                ) {
+                    Text(fallbackLabel).font(.statusFont).foregroundStyle(.secondary)
                         .offset(y: -4)
-                } else if nano {
-                    Text("No Patch").font(.statusFont).foregroundStyle(.secondary)
-                        .offset(y: -4)
-                }
-                // Other pumps
-                else if let reservoir = reservoir {
+                } else if let reservoir = reservoir {
                     if (concentration.last?.concentration ?? 1) != 1, !state.settingsManager.settings.hideInsulinBadge {
                         NonStandardInsulin(concentration: concentration.last?.concentration ?? 1, pump: .other)
                     }
@@ -181,9 +203,6 @@ struct PumpView: View {
                                 }
                             }
                     }
-                } else {
-                    Text("No Pump").font(.statusFont).foregroundStyle(.secondary)
-                        .offset(y: -4)
                 }
 
                 // MDT and Dana
