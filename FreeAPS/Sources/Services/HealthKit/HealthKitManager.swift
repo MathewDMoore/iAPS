@@ -31,7 +31,7 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
     private enum Config {
         // unwraped HKObjects
         static var readPermissions: Set<HKSampleType> {
-            Set([healthBGObject].compactMap { $0 }) }
+            Set([healthBGObject, healthInsulinObject].compactMap { $0 }) }
 
         static var writePermissions: Set<HKSampleType> {
             Set([healthBGObject, healthCarbObject, healthInsulinObject].compactMap { $0 }) }
@@ -50,6 +50,7 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
     @Injected() private var settingsManager: SettingsManager!
     @Injected() private var broadcaster: Broadcaster!
     @Injected() var carbsStorage: CarbsStorage!
+    @Injected() private var pumpHistoryStorage: PumpHistoryStorage!
 
     private let processQueue = DispatchQueue(label: "BaseHealthKitManager.processQueue")
     private var lifetime = Lifetime()
@@ -187,10 +188,12 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
     }
 
     func saveIfNeeded(pumpEvents events: [PumpHistoryEvent]) {
+        let loopEvents = events.filter { !($0.isExternal ?? false) }
+
         guard settingsManager.settings.useAppleHealth,
               let sampleType = Config.healthInsulinObject,
               checkAvailabilitySave(objectTypeToHealthStore: sampleType),
-              events.isNotEmpty
+              loopEvents.isNotEmpty
         else { return }
 
         func delete(syncIds: [String]?) {
@@ -251,11 +254,11 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
             }
         }
         // delete existing event in HK where the amount is not the last value in the pumphistory
-        loadSamplesFromHealth(sampleType: sampleType, withIDs: events.map(\.id))
+        loadSamplesFromHealth(sampleType: sampleType, withIDs: loopEvents.map(\.id))
             .receive(on: processQueue)
             .compactMap { samples -> [String] in
                 let sampleIDs = samples.compactMap(\.syncIdentifier)
-                let bolusToDelete = events
+                let bolusToDelete = loopEvents
                     .filter { $0.type == .bolus && sampleIDs.contains($0.id) }
                     .compactMap { event -> String? in
                         guard let amount = event.amount else { return nil }
@@ -270,17 +273,17 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
             .sink(receiveValue: delete)
             .store(in: &lifetime)
 
-        loadSamplesFromHealth(sampleType: sampleType, withIDs: events.map(\.id))
+        loadSamplesFromHealth(sampleType: sampleType, withIDs: loopEvents.map(\.id))
             .receive(on: processQueue)
             .compactMap { samples -> ([InsulinBolus], [InsulinBasal]) in
                 let sampleIDs = samples.compactMap(\.syncIdentifier)
-                let bolus = events
+                let bolus = loopEvents
                     .filter { $0.type == .bolus && !sampleIDs.contains($0.id) }
                     .compactMap { event -> InsulinBolus? in
                         guard let amount = event.amount else { return nil }
                         return InsulinBolus(id: event.id, amount: amount, date: event.timestamp)
                     }
-                let basalEvents = events
+                let basalEvents = loopEvents
                     .filter { $0.type == .tempBasal && !sampleIDs.contains($0.id) }
                     .sorted(by: { $0.timestamp < $1.timestamp })
                 let basal = basalEvents.enumerated()
@@ -322,6 +325,71 @@ final class BaseHealthKitManager: HealthKitManager, Injectable {
             }
             .sink(receiveValue: save)
             .store(in: &lifetime)
+    }
+
+    private func importExternalInPenBoluses() {
+        guard settingsManager.settings.useAppleHealth,
+              let sampleType = Config.healthInsulinObject
+        else { return }
+
+        let startDate = Date().addingTimeInterval(-24 * 60 * 60)
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: nil, options: .strictStartDate)
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        let query = HKSampleQuery(
+            sampleType: sampleType,
+            predicate: predicate,
+            limit: 200,
+            sortDescriptors: [sort]
+        ) { [weak self] _, results, error in
+            guard let self = self else { return }
+            if let error = error {
+                warning(.service, "Failed to import external insulin from HealthKit", error: error)
+                return
+            }
+
+            let samples = (results as? [HKQuantitySample]) ?? []
+            let events = samples.compactMap { sample -> PumpHistoryEvent? in
+                let metadata = sample.metadata ?? [:]
+                if metadata[Config.freeAPSMetaKey] as? Bool == true {
+                    return nil
+                }
+
+                let source = sample.sourceRevision.source.bundleIdentifier.lowercased()
+                let looksLikeInPen = source.contains("inpen") || source.contains("companion")
+                guard looksLikeInPen else { return nil }
+
+                guard let reason = metadata[HKMetadataKeyInsulinDeliveryReason] as? NSNumber,
+                      reason.intValue == 2
+                else { return nil }
+
+                let amount = Decimal(sample.quantity.doubleValue(for: .internationalUnit()))
+                guard amount > 0 else { return nil }
+
+                let syncID = sample.syncIdentifier ?? sample.uuid.uuidString
+                let eventID = "hk-inpen-\(syncID)"
+
+                return PumpHistoryEvent(
+                    id: eventID,
+                    type: .bolus,
+                    timestamp: sample.startDate,
+                    amount: amount,
+                    duration: nil,
+                    durationMin: nil,
+                    rate: nil,
+                    temp: nil,
+                    carbInput: nil,
+                    note: "Imported from InPen",
+                    isSMB: false,
+                    isExternal: true
+                )
+            }
+
+            guard !events.isEmpty else { return }
+            self.pumpHistoryStorage.storeEvents(events)
+        }
+
+        healthKitStore.execute(query)
     }
 
     /// Try to load samples from Health store
@@ -440,6 +508,7 @@ extension BaseHealthKitManager: PumpHistoryObserver {
     func pumpHistoryDidUpdate(_ events: [PumpHistoryEvent]) {
         processQueue.async {
             self.saveIfNeeded(pumpEvents: events)
+            self.importExternalInPenBoluses()
         }
     }
 }
