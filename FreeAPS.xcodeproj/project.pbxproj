@@ -1135,8 +1135,14 @@
 		E00EEC0127368630002FF094 /* APSAssembly.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APSAssembly.swift; sourceTree = "<group>"; };
 		E00EEC0227368630002FF094 /* NetworkAssembly.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkAssembly.swift; sourceTree = "<group>"; };
 		E06B9119275B5EEA003C04B6 /* Array+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Extension.swift"; sourceTree = "<group>"; };
+		E09B0A80300F438A00685AE2 /* AfrezzaPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaPreferences.swift; sourceTree = "<group>"; };
+		E09B0A81300F439500685AE2 /* AfrezzaModelPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaModelPreset.swift; sourceTree = "<group>"; };
+		E09B0A82300F439D00685AE2 /* AfrezzaQuickActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaQuickActionsView.swift; sourceTree = "<group>"; };
+		E09B0A83300F43CB00685AE2 /* AfrezzaSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaSettingsView.swift; sourceTree = "<group>"; };
 		E0CC2C5B275B9DAE00A7BC71 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		E0D4F80427513ECF00BDF1FE /* HealthKitSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitSample.swift; sourceTree = "<group>"; };
+		E0DB09EC301FFBDB00DFE18C /* FreeAPSRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FreeAPSRelease.entitlements; sourceTree = "<group>"; };
+		E0DB09ED301FFBF700DFE18C /* FreeAPSWatchRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FreeAPSWatchRelease.entitlements; sourceTree = "<group>"; };
 		E26904AACA8D9C15D229D675 /* SnoozeStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SnoozeStateModel.swift; sourceTree = "<group>"; };
 		E625985B47742D498CB1681A /* NotificationsConfigProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationsConfigProvider.swift; sourceTree = "<group>"; };
 		E9AAB83FB6C3B41EFD1846A0 /* AddTempTargetRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddTempTargetRootView.swift; sourceTree = "<group>"; };
@@ -2105,6 +2111,10 @@
 				388E595925AD948C0019842D /* Products */,
 				3818AA48274C267000843DB3 /* Frameworks */,
 				192F0FF5276AC36D0085BE4D /* Recovered References */,
+				E09B0A80300F438A00685AE2 /* AfrezzaPreferences.swift */,
+				E09B0A81300F439500685AE2 /* AfrezzaModelPreset.swift */,
+				E09B0A82300F439D00685AE2 /* AfrezzaQuickActionsView.swift */,
+				E09B0A83300F43CB00685AE2 /* AfrezzaSettingsView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2122,6 +2132,7 @@
 		388E595A25AD948C0019842D /* FreeAPS */ = {
 			isa = PBXGroup;
 			children = (
+				E0DB09EC301FFBDB00DFE18C /* FreeAPSRelease.entitlements */,
 				3811DED425C9E1E300A708ED /* Resources */,
 				3811DE1325C9D39E00A708ED /* Sources */,
 			);
@@ -2335,6 +2346,7 @@
 		38E8751D27554D5500975559 /* FreeAPSWatch */ = {
 			isa = PBXGroup;
 			children = (
+				E0DB09ED301FFBF700DFE18C /* FreeAPSWatchRelease.entitlements */,
 				1980131D29CC9839002FF024 /* Info.plist */,
 				38E8755627564B6100975559 /* FreeAPSWatch.entitlements */,
 				38E8751E27554D5700975559 /* Assets.xcassets */,
@@ -4233,11 +4245,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				BUNDLE_IDENTIFIER = "$(BUNDLE_IDENTIFIER)";
-				CODE_SIGN_ENTITLEMENTS = FreeAPS/Resources/FreeAPS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = FreeAPS/FreeAPSRelease.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = $APP_BUILD_NUMBER;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = "$(DEVELOPER_TEAM)";
+				DEVELOPMENT_TEAM = P43N26B5TN;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4296,13 +4308,13 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FreeAPSWatch/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = iAPS;
-				INFOPLIST_KEY_CLKComplicationPrincipalClass = "$(PRODUCT_MODULE_NAME).ComplicationController";
+				INFOPLIST_KEY_CLKComplicationPrincipalClass = FreeAPSWatch.ComplicationController;
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Bla bla Record Health";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Bla bla Share Health";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Bla bla Update Health";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(BUNDLE_IDENTIFIER)";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = ru.artpancreas.P43N26B5TN.FreeAPS;
 				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@executable_path/Frameworks",
@@ -4333,20 +4345,20 @@
 				ASSETCATALOG_COMPILER_TARGET_STICKERS_ICON_ROLE = "host-app";
 				BUNDLE_IDENTIFIER = "$(BUNDLE_IDENTIFIER)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_ENTITLEMENTS = "FreeAPSWatch WatchKit Extension/FreeAPSWatch WatchKit Extension.entitlements";
+				CODE_SIGN_ENTITLEMENTS = FreeAPSWatch/FreeAPSWatchRelease.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = $APP_BUILD_NUMBER;
-				DEVELOPMENT_TEAM = "$(DEVELOPER_TEAM)";
+				DEVELOPMENT_TEAM = P43N26B5TN;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FreeAPSWatch/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = iAPS;
-				INFOPLIST_KEY_CLKComplicationPrincipalClass = "$(PRODUCT_MODULE_NAME).ComplicationController";
+				INFOPLIST_KEY_CLKComplicationPrincipalClass = FreeAPSWatch.ComplicationController;
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Bla bla Record Health";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Bla bla Share Health";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Bla bla Update Health";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(BUNDLE_IDENTIFIER)";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = ru.artpancreas.P43N26B5TN.FreeAPS;
 				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@executable_path/Frameworks",
@@ -4390,7 +4402,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "$(DEVELOPER_TEAM)";
+				DEVELOPMENT_TEAM = P43N26B5TN;
 				INFOPLIST_FILE = FreeAPSTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.3;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4449,7 +4461,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "$(DEVELOPER_TEAM)";
+				DEVELOPMENT_TEAM = P43N26B5TN;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
