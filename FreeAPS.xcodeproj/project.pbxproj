@@ -428,6 +428,8 @@
 		E06B911A275B5EEA003C04B6 /* Array+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E06B9119275B5EEA003C04B6 /* Array+Extension.swift */; };
 		E0CC2C5C275B9F0F00A7BC71 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E0CC2C5B275B9DAE00A7BC71 /* HealthKit.framework */; };
 		E0D4F80527513ECF00BDF1FE /* HealthKitSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D4F80427513ECF00BDF1FE /* HealthKitSample.swift */; };
+		E0DB09EF302005BE00DFE18C /* AfrezzaDoseEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DB09EE302005BE00DFE18C /* AfrezzaDoseEvent.swift */; };
+		E0DB09F13020064C00DFE18C /* AfrezzaDoseStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DB09F03020064C00DFE18C /* AfrezzaDoseStorage.swift */; };
 		E13B7DAB2A435F57066AF02E /* TargetsEditorStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F58DDD71F0E795464FA3F0 /* TargetsEditorStateModel.swift */; };
 		E25073BC86C11C3D6A42F5AC /* CalibrationsStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47DFCE895C930F784EF11843 /* CalibrationsStateModel.swift */; };
 		E39E418C56A5A46B61D960EE /* ConfigEditorStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D5B4F8B4194BB7E260EF251 /* ConfigEditorStateModel.swift */; };
@@ -1143,6 +1145,8 @@
 		E0D4F80427513ECF00BDF1FE /* HealthKitSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitSample.swift; sourceTree = "<group>"; };
 		E0DB09EC301FFBDB00DFE18C /* FreeAPSRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FreeAPSRelease.entitlements; sourceTree = "<group>"; };
 		E0DB09ED301FFBF700DFE18C /* FreeAPSWatchRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FreeAPSWatchRelease.entitlements; sourceTree = "<group>"; };
+		E0DB09EE302005BE00DFE18C /* AfrezzaDoseEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaDoseEvent.swift; sourceTree = "<group>"; };
+		E0DB09F03020064C00DFE18C /* AfrezzaDoseStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaDoseStorage.swift; sourceTree = "<group>"; };
 		E26904AACA8D9C15D229D675 /* SnoozeStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SnoozeStateModel.swift; sourceTree = "<group>"; };
 		E625985B47742D498CB1681A /* NotificationsConfigProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationsConfigProvider.swift; sourceTree = "<group>"; };
 		E9AAB83FB6C3B41EFD1846A0 /* AddTempTargetRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddTempTargetRootView.swift; sourceTree = "<group>"; };
@@ -1927,6 +1931,7 @@
 		3811DED425C9E1E300A708ED /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				E0DB09F03020064C00DFE18C /* AfrezzaDoseStorage.swift */,
 				19DA487F29CD2B8400EEA1E7 /* Assets.xcassets */,
 				B9CAAEFB2AE70836000F68BC /* branch.txt */,
 				19CE0E582DD9F3060050FC89 /* Configuration.swift */,
@@ -2132,6 +2137,7 @@
 		388E595A25AD948C0019842D /* FreeAPS */ = {
 			isa = PBXGroup;
 			children = (
+				E0DB09EE302005BE00DFE18C /* AfrezzaDoseEvent.swift */,
 				E0DB09EC301FFBDB00DFE18C /* FreeAPSRelease.entitlements */,
 				3811DED425C9E1E300A708ED /* Resources */,
 				3811DE1325C9D39E00A708ED /* Sources */,
@@ -3435,6 +3441,7 @@
 				CEA4F62329BE10F70011ADF7 /* SavitzkyGolayFilter.swift in Sources */,
 				38B4F3C325E2A20B00E76A18 /* PumpSetupView.swift in Sources */,
 				38E4453C274E411700EC9A94 /* Disk+Codable.swift in Sources */,
+				E0DB09F13020064C00DFE18C /* AfrezzaDoseStorage.swift in Sources */,
 				19E1F7EF29D08EBA005C8D20 /* IconConfigRootWiew.swift in Sources */,
 				382C134B25F14E3700715CE1 /* BGTargets.swift in Sources */,
 				19493A3B2C5997AD00EC83A7 /* Database.swift in Sources */,
@@ -3841,6 +3848,7 @@
 				192A9A122C0F5361000BBC29 /* MealsShortcuts.swift in Sources */,
 				193CA2DA2E1E72B200DF9998 /* WebViewScriptExecutor.swift in Sources */,
 				19914CDC2EDDC09400DC2051 /* MealData.swift in Sources */,
+				E0DB09EF302005BE00DFE18C /* AfrezzaDoseEvent.swift in Sources */,
 				B7C465E9472624D8A2BE2A6A /* CalibrationsDataFlow.swift in Sources */,
 				320D030F724170A637F06D50 /* CalibrationsProvider.swift in Sources */,
 				19E1F7E829D082D0005C8D20 /* IconConfigDataFlow.swift in Sources */,
