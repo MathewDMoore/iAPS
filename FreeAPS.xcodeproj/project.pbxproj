@@ -1145,8 +1145,8 @@
 		E0D4F80427513ECF00BDF1FE /* HealthKitSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitSample.swift; sourceTree = "<group>"; };
 		E0DB09EC301FFBDB00DFE18C /* FreeAPSRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FreeAPSRelease.entitlements; sourceTree = "<group>"; };
 		E0DB09ED301FFBF700DFE18C /* FreeAPSWatchRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FreeAPSWatchRelease.entitlements; sourceTree = "<group>"; };
-		E0DB09EE302005BE00DFE18C /* AfrezzaDoseEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaDoseEvent.swift; sourceTree = "<group>"; };
-		E0DB09F03020064C00DFE18C /* AfrezzaDoseStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaDoseStorage.swift; sourceTree = "<group>"; };
+		E0DB09EE302005BE00DFE18C /* AfrezzaDoseEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaDoseEvent.swift; path = Sources/Models/AfrezzaDoseEvent.swift; sourceTree = "<group>"; };
+		E0DB09F03020064C00DFE18C /* AfrezzaDoseStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaDoseStorage.swift; path = ../Sources/APS/Storage/AfrezzaDoseStorage.swift; sourceTree = "<group>"; };
 		E26904AACA8D9C15D229D675 /* SnoozeStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SnoozeStateModel.swift; sourceTree = "<group>"; };
 		E625985B47742D498CB1681A /* NotificationsConfigProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationsConfigProvider.swift; sourceTree = "<group>"; };
 		E9AAB83FB6C3B41EFD1846A0 /* AddTempTargetRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddTempTargetRootView.swift; sourceTree = "<group>"; };
