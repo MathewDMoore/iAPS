@@ -119,7 +119,7 @@ extension Screen {
         case .autoISF:
             AutoISF.RootView(resolver: resolver)
         case .afrezza:
-            AfrezzaSettingsView()
+            AfrezzaSettingsView(resolver: resolver)
         }
     }
 
