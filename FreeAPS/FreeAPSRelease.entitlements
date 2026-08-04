@@ -15,6 +15,12 @@
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>$(APP_GROUP_ID)</string>
+		<string>group.com.P43N26B5TN.Mathew.LoopGroup</string>
+		<string>group.com.P43N26B5TN.MathewsLoop.LoopGroup</string>
+		<string>group.com.healthkit.Loop</string>
+		<string>group.org.nightscout.P43N26B5TN.trio.trio-app-group</string>
+		<string>group.com.P43N26B5TN.loopkitGroup</string>
+		<string>group.com.P43N26B5TN.loopkit.Loop</string>
 	</array>
 </dict>
 </plist>

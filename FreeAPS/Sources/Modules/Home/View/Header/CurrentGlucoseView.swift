@@ -151,21 +151,36 @@ struct CurrentGlucoseView: View {
                 let colour = colorScheme == .light ? Color.black : Color.white
                 let lineColour: Color = sensorAge >= sensordays - secondsOfDay * 1 ? Color.red
                     .opacity(0.9) : sensorAge >= sensordays - secondsOfDay * 2 ? Color
-                    .orange : Color.white
-                let minutesAndHours = (displayExpiration && expiration < 1 * 8.64E4) || (displaySAGE && sensorAge < 1 * 8.64E4)
+                    .orange : Color.green
+                let isG7FifteenDay = sensordays >= 15 * secondsOfDay
+                let minutesAndHours = isG7FifteenDay ||
+                    (displayExpiration && expiration < secondsOfDay) ||
+                    (displaySAGE && sensorAge < secondsOfDay)
 
                 Sage(amount: sensorAge, expiration: expiration, lineColour: lineColour, sensordays: sensordays)
-                    .frame(width: 36, height: 36)
+                    .frame(
+                        width: isG7FifteenDay ? 48 : 36,
+                        height: isG7FifteenDay ? 48 : 36
+                    )
                     .overlay {
-                        HStack {
+                        VStack(spacing: 0) {
+                            if isG7FifteenDay {
+                                Text("G7")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                            }
+
                             Text(
                                 !minutesAndHours ?
                                     (remainingTimeFormatterDays.string(from: displayExpiration ? expiration : sensorAge) ?? "")
                                     .replacingOccurrences(of: ",", with: " ") :
                                     (remainingTimeFormatter.string(from: displayExpiration ? expiration : sensorAge) ?? "")
                                     .replacingOccurrences(of: ",", with: " ")
-                            ).foregroundStyle(colour).fontWeight(colorScheme == .dark ? .semibold : .regular)
+                            )
+                            .font(isG7FifteenDay ? .caption2 : .footnote)
+                            .fontWeight(colorScheme == .dark ? .semibold : .regular)
                         }
+                        .foregroundStyle(colour)
                     }
             }
         }

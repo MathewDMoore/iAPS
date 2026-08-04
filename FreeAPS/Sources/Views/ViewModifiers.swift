@@ -195,7 +195,7 @@ struct Sage: View {
         let scheme = colorScheme == .light ? Color(.systemGray5) : Color(.systemGray2)
 
         Circle()
-            .stroke(scheme, lineWidth: 5)
+            .stroke(lineColour, lineWidth: 5)
             .background(
                 Circle()
                     .fill(
