@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 import Swinject
 
@@ -6,6 +7,7 @@ struct AfrezzaSettingsView: View {
     @State private var newSizeText = ""
     @State private var recentDoses: [AfrezzaDoseEvent] = []
     @State private var lastLoggedSize: Int?
+    @State private var activityDate = Date()
 
     private let doseStorage: AfrezzaDoseStorage
 
@@ -56,6 +58,53 @@ struct AfrezzaSettingsView: View {
                             "This does not affect pump delivery, IOB, predictions, or automated dosing."
                     )
                 }
+            }
+
+            Section {
+                if let dose = latestActiveDose,
+                   let activity = latestActivity
+                {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Label(
+                                "\(dose.cartridgeUnits) U",
+                                systemImage: "wind"
+                            )
+                            .font(.headline)
+
+                            Spacer()
+
+                            Text("\(activityPercent(activity))%")
+                                .font(.headline)
+                                .monospacedDigit()
+                        }
+
+                        ProgressView(
+                            value: activity.activityFraction,
+                            total: 1
+                        )
+                        .tint(.green)
+
+                        HStack {
+                            Text("\(durationText(activity.elapsed)) elapsed")
+                            Spacer()
+                            Text("\(durationText(activity.remaining)) remaining")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                } else {
+                    Label("No active Afrezza", systemImage: "wind")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Active Afrezza")
+            } footer: {
+                Text(
+                    "Estimated activity is display-only and does not alter " +
+                        "IOB, glucose predictions, SMBs, or pump delivery."
+                )
             }
 
             Section {
@@ -129,7 +178,15 @@ struct AfrezzaSettingsView: View {
                 EditButton()
             }
         }
-        .onAppear(perform: reloadDoses)
+        .onAppear {
+            reloadDoses()
+            activityDate = Date()
+        }
+        .onReceive(
+            Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+        ) { date in
+            activityDate = date
+        }
     }
 
     private var dateFormatter: DateFormatter {
@@ -137,6 +194,40 @@ struct AfrezzaSettingsView: View {
         formatter.dateStyle = .short
         formatter.timeStyle = .short
         return formatter
+    }
+
+    private var latestActiveDose: AfrezzaDoseEvent? {
+        recentDoses.first { event in
+            AfrezzaModelPreset.activity(
+                for: event,
+                at: activityDate
+            ).isActive
+        }
+    }
+
+    private var latestActivity: AfrezzaActivity? {
+        guard let dose = latestActiveDose else { return nil }
+
+        return AfrezzaModelPreset.activity(
+            for: dose,
+            at: activityDate
+        )
+    }
+
+    private func activityPercent(_ activity: AfrezzaActivity) -> Int {
+        Int((activity.activityFraction * 100).rounded())
+    }
+
+    private func durationText(_ interval: TimeInterval) -> String {
+        let totalMinutes = max(Int(interval / 60), 0)
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        }
+
+        return "\(minutes)m"
     }
 
     private var canAddSize: Bool {
