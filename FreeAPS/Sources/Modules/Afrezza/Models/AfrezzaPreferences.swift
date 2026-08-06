@@ -10,7 +10,7 @@ import SwiftUI
     @AppStorage("afrezzaLastUsedSize") var lastUsedSize: Int = 8
 
     // In-memory representation of cartridge sizes
-    @Published var cartridgeSizes: [Int] = [4, 8, 12] {
+    @Published var cartridgeSizes: [Int] = [4, 8] {
         didSet { persistSizes() }
     }
 
