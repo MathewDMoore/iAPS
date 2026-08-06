@@ -4,6 +4,7 @@ class ChartModel: ObservableObject {
     @Published var suggestion: Suggestion?
     @Published var glucose: [BloodGlucose]
     @Published var activity: [IOBTick0]
+    @Published var afrezzaActivity: [IOBTick0]
     @Published var cob: [IOBData] // we already have IOBData in storage and it contains COB values
     @Published var isManual: [BloodGlucose]
     @Published var tempBasals: [PumpHistoryEvent]
@@ -55,6 +56,7 @@ class ChartModel: ObservableObject {
         suggestion: Suggestion?,
         glucose: [BloodGlucose],
         activity: [IOBTick0],
+        afrezzaActivity: [IOBTick0],
         cob: [IOBData],
         isManual: [BloodGlucose],
         tempBasals: [PumpHistoryEvent],
@@ -105,6 +107,7 @@ class ChartModel: ObservableObject {
         self.suggestion = suggestion
         self.glucose = glucose
         self.activity = activity
+        self.afrezzaActivity = afrezzaActivity
         self.cob = cob
         self.isManual = isManual
         self.tempBasals = tempBasals

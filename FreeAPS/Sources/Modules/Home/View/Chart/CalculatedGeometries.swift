@@ -7,6 +7,7 @@ struct CalculatedGeometries {
 
     let glucoseDots: [(rect: CGRect, glucose: Int?)]
     let activityDots: [CGPoint]
+    let afrezzaActivityDots: [CGPoint]
     let activityZeroPointY: CGFloat?
     let cobDots: [(CGPoint, IOBData)]
     let cobZeroPointY: CGFloat?
@@ -244,6 +245,7 @@ private final class GeometriesBuilder {
         let glucoseDots = calculateGlucoseDots()
 
         let activityDots = calculateActivityDots()
+        let afrezzaActivityDots = calculateAfrezzaActivityDots()
 
         let cobDots = calculateCobDots(activityZeroPointY: activityZeroPointY)
         let cobZeroPointY = cobToCoordinate(date: Date(), cob: 0, activityZeroPointY: activityZeroPointY)
@@ -292,6 +294,7 @@ private final class GeometriesBuilder {
 
             glucoseDots: glucoseDots,
             activityDots: activityDots,
+            afrezzaActivityDots: afrezzaActivityDots,
             activityZeroPointY: activityZeroPointY,
             cobDots: cobDots,
             cobZeroPointY: cobZeroPointY,
@@ -517,6 +520,27 @@ private final class GeometriesBuilder {
     private func calculateActivityDots() -> [CGPoint] {
         data.activity.map { value -> CGPoint in
             activityToCoordinate(date: value.time, activity: value.activity)
+        }
+    }
+
+    private func calculateAfrezzaActivityDots() -> [CGPoint] {
+        let maximum = data.afrezzaActivity
+            .map { NSDecimalNumber(decimal: $0.activity).doubleValue }
+            .max() ?? 0
+
+        guard maximum > 0 else { return [] }
+
+        let zeroY = activityToYCoordinate(0)
+        let usableHeight = ChartConfig.activityChartHeight * 0.85
+
+        return data.afrezzaActivity.map { value in
+            let raw = NSDecimalNumber(decimal: value.activity).doubleValue
+            let fraction = min(max(raw / maximum, 0), 1)
+
+            return CGPoint(
+                x: timeToXCoordinate(value.time.timeIntervalSince1970),
+                y: zeroY - CGFloat(fraction) * usableHeight
+            )
         }
     }
 

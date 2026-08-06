@@ -44,8 +44,19 @@ extension AfrezzaModelPreset {
         for event: AfrezzaDoseEvent,
         at date: Date = .now
     ) -> AfrezzaActivity {
-        let elapsed = max(date.timeIntervalSince(event.date), 0)
+        let rawElapsed = date.timeIntervalSince(event.date)
         let duration = afrezza.duration
+
+        guard rawElapsed >= 0 else {
+            return AfrezzaActivity(
+                elapsed: 0,
+                remaining: duration,
+                activityFraction: 0,
+                isActive: false
+            )
+        }
+
+        let elapsed = rawElapsed
         let onset = afrezza.onset
         let peak = 35 * 60.0
 

@@ -14,6 +14,7 @@ extension Home {
         @Injected() var apsManager: APSManager!
         @Injected() var nightscoutManager: NightscoutManager!
         @Injected() var storage: TempTargetsStorage!
+        @Injected() var afrezzaDoseStorage: AfrezzaDoseStorage!
         @Injected() var keychain: Keychain!
         let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
         private let timer = DispatchTimer(timeInterval: 5)
@@ -92,6 +93,7 @@ extension Home {
             suggestion: nil,
             glucose: [],
             activity: [],
+            afrezzaActivity: [],
             cob: [],
             isManual: [],
             tempBasals: [],
@@ -153,6 +155,7 @@ extension Home {
             setupBasals()
             setupBoluses()
             setupActivity()
+            setupAfrezzaActivity()
             setupSuspensions()
             setupPumpSettings()
             setupBasalProfile()
@@ -240,6 +243,7 @@ extension Home {
             profileButton = settingsManager.settings.profileButton
 
             broadcaster.register(GlucoseObserver.self, observer: self)
+            broadcaster.register(AfrezzaDoseObserver.self, observer: self)
             broadcaster.register(SuggestionObserver.self, observer: self)
             broadcaster.register(SettingsObserver.self, observer: self)
             broadcaster.register(PumpHistoryObserver.self, observer: self)
@@ -504,6 +508,49 @@ extension Home {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.data.activity = CoreDataStorage().fetchInsulinData(interval: DateFilter.day.startDate)
+            }
+        }
+
+        private func setupAfrezzaActivity() {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+
+                let start = DateFilter.day.startDate as Date
+                let end = Date()
+                let modelDuration = AfrezzaModelPreset.afrezza.duration
+
+                let events = afrezzaDoseStorage.recent(
+                    since: start.addingTimeInterval(-modelDuration)
+                )
+
+                let sampleInterval: TimeInterval = 5 * 60
+                var sampleDate = start
+                var samples: [IOBTick0] = []
+
+                while sampleDate <= end {
+                    let combinedActivity = events.reduce(0.0) { total, event in
+                        let activity = AfrezzaModelPreset.activity(
+                            for: event,
+                            at: sampleDate
+                        )
+
+                        return total +
+                            Double(event.cartridgeUnits) *
+                            activity.activityFraction
+                    }
+
+                    samples.append(
+                        IOBTick0(
+                            time: sampleDate,
+                            iob: 0,
+                            activity: Decimal(combinedActivity)
+                        )
+                    )
+
+                    sampleDate = sampleDate.addingTimeInterval(sampleInterval)
+                }
+
+                data.afrezzaActivity = samples
             }
         }
 
@@ -784,6 +831,7 @@ extension Home.StateModel:
         setupLoopStats()
         setupData()
         setupActivity()
+        setupAfrezzaActivity()
         setupCob()
     }
 
@@ -849,6 +897,7 @@ extension Home.StateModel:
         setupAnnouncements()
         setupIOB()
         setupActivity()
+        setupAfrezzaActivity()
     }
 
     func pumpSettingsDidChange(_: PumpSettings) {
@@ -893,5 +942,11 @@ extension Home.StateModel:
 extension Home.StateModel: CompletionDelegate {
     func completionNotifyingDidComplete(_: CompletionNotifying) {
         setupPump = false
+    }
+}
+
+extension Home.StateModel: AfrezzaDoseObserver {
+    func afrezzaDosesDidUpdate(_: [AfrezzaDoseEvent]) {
+        setupAfrezzaActivity()
     }
 }

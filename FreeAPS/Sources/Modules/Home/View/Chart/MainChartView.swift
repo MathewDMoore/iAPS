@@ -182,6 +182,7 @@ struct MainChartView: View {
             ping(data.$autotunedBasalProfile),
             ping(data.$glucose),
             ping(data.$activity),
+            ping(data.$afrezzaActivity),
             ping(data.$cob),
             ping(data.$isManual),
             ping(data.$announcement),
@@ -677,6 +678,16 @@ struct MainChartCanvas: View {
                     colorScheme == .dark ? Color.white.opacity(0.3) : Color.black.opacity(0.5),
                     style: StrokeStyle(lineWidth: 0.5)
                 )
+
+            afrezzaActivityStrokePath()
+                .stroke(
+                    Color.green,
+                    style: StrokeStyle(
+                        lineWidth: 2,
+                        lineCap: .round,
+                        lineJoin: .round
+                    )
+                )
         }
     }
 
@@ -753,6 +764,18 @@ struct MainChartCanvas: View {
             guard geom.activityDots.count >= 2 else { return }
             path.move(to: geom.activityDots[0])
             for point in geom.activityDots.dropFirst() {
+                path.addLine(to: point)
+            }
+        }
+    }
+
+    private func afrezzaActivityStrokePath() -> Path {
+        Path { path in
+            guard geom.afrezzaActivityDots.count >= 2 else { return }
+
+            path.move(to: geom.afrezzaActivityDots[0])
+
+            for point in geom.afrezzaActivityDots.dropFirst() {
                 path.addLine(to: point)
             }
         }
