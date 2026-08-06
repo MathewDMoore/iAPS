@@ -23,11 +23,18 @@ public struct SimpleInsulinModelPreset: InsulinModelPresetLike {
 }
 
 public enum AfrezzaModelPreset {
-    /// Approximate values: onset ~14 minutes, duration ~90 minutes
+    static let baselineVersion = "baseline-v1"
+
+    /// Display-only baseline model.
+    ///
+    /// This is an initial population-level approximation and is not yet
+    /// personalized or validated for automated dosing.
+    static let timeToPeak: TimeInterval = 40 * 60
+
     public static let afrezza = SimpleInsulinModelPreset(
-        id: "afrezza",
-        name: "Inhaled (Afrezza)",
-        onset: 14 * 60,
+        id: "afrezza-\(baselineVersion)",
+        name: "Inhaled (Afrezza) — \(baselineVersion)",
+        onset: 12 * 60,
         duration: 90 * 60
     )
 }
@@ -58,7 +65,7 @@ extension AfrezzaModelPreset {
 
         let elapsed = rawElapsed
         let onset = afrezza.onset
-        let peak = 35 * 60.0
+        let peak = timeToPeak
 
         guard elapsed < duration else {
             return AfrezzaActivity(
@@ -71,12 +78,19 @@ extension AfrezzaModelPreset {
 
         let fraction: Double
 
-        if elapsed < onset {
+        if elapsed <= onset {
             fraction = 0
         } else if elapsed <= peak {
-            fraction = (elapsed - onset) / (peak - onset)
+            let progress = (elapsed - onset) / (peak - onset)
+
+            // Smooth rise: zero slope at onset and peak.
+            fraction = progress * progress * (3 - 2 * progress)
         } else {
-            fraction = (duration - elapsed) / (duration - peak)
+            let progress = (elapsed - peak) / (duration - peak)
+
+            // Smooth decline: one at peak, zero at modeled duration.
+            let smooth = progress * progress * (3 - 2 * progress)
+            fraction = 1 - smooth
         }
 
         return AfrezzaActivity(
