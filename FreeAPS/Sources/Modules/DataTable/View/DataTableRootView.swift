@@ -347,6 +347,72 @@ extension DataTable {
                     }
 
                 } else if item.type == .afrezza {
+                    let doseDate = item.date
+                    let duration = AfrezzaModelPreset.afrezza.duration
+
+                    let readings = state.glucose
+                        .map(\.glucose)
+                        .filter {
+                            $0.dateString >= doseDate.addingTimeInterval(-7.5 * 60) &&
+                                $0.dateString <= doseDate.addingTimeInterval(duration)
+                        }
+                        .sorted { $0.dateString < $1.dateString }
+
+                    let doseReading = readings.min {
+                        abs($0.dateString.timeIntervalSince(doseDate)) <
+                            abs($1.dateString.timeIntervalSince(doseDate))
+                    }
+
+                    let windowReadings = readings.filter {
+                        $0.dateString >= doseDate &&
+                            $0.dateString <= doseDate.addingTimeInterval(duration)
+                    }
+
+                    let nadirReading = windowReadings
+                        .filter { $0.glucose != nil }
+                        .min {
+                            ($0.glucose ?? Int.max) < ($1.glucose ?? Int.max)
+                        }
+
+                    let reading30 = readings.min {
+                        abs(
+                            $0.dateString.timeIntervalSince(
+                                doseDate.addingTimeInterval(30 * 60)
+                            )
+                        ) <
+                            abs(
+                                $1.dateString.timeIntervalSince(
+                                    doseDate.addingTimeInterval(30 * 60)
+                                )
+                            )
+                    }
+
+                    let reading60 = readings.min {
+                        abs(
+                            $0.dateString.timeIntervalSince(
+                                doseDate.addingTimeInterval(60 * 60)
+                            )
+                        ) <
+                            abs(
+                                $1.dateString.timeIntervalSince(
+                                    doseDate.addingTimeInterval(60 * 60)
+                                )
+                            )
+                    }
+
+                    let reading90 = readings.min {
+                        abs(
+                            $0.dateString.timeIntervalSince(
+                                doseDate.addingTimeInterval(90 * 60)
+                            )
+                        ) <
+                            abs(
+                                $1.dateString.timeIntervalSince(
+                                    doseDate.addingTimeInterval(90 * 60)
+                                )
+                            )
+                    }
+
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Image(systemName: "wind")
@@ -367,13 +433,9 @@ extension DataTable {
 
                         HStack(spacing: 6) {
                             Text("Onset 12m")
-
                             Spacer()
-
                             Text("▲ Peak 40m")
-
                             Spacer()
-
                             Text("End 90m")
                         }
                         .font(.caption2)
@@ -427,6 +489,91 @@ extension DataTable {
                         }
                         .frame(height: 10)
                         .padding(.leading, 34)
+
+                        if let start = doseReading?.glucose {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Observed glucose response")
+                                    .font(.caption.bold())
+
+                                HStack {
+                                    Text("At dose")
+                                    Spacer()
+                                    Text("\(start) mg/dL")
+                                }
+
+                                if let value = reading30?.glucose {
+                                    HStack {
+                                        Text("+30 min")
+                                        Spacer()
+                                        Text("\(value) mg/dL")
+                                    }
+                                }
+
+                                if let value = reading60?.glucose {
+                                    HStack {
+                                        Text("+60 min")
+                                        Spacer()
+                                        Text("\(value) mg/dL")
+                                    }
+                                }
+
+                                if let value = reading90?.glucose {
+                                    HStack {
+                                        Text("+90 min")
+                                        Spacer()
+                                        Text("\(value) mg/dL")
+                                    }
+                                }
+
+                                if let nadir = nadirReading,
+                                   let nadirValue = nadir.glucose
+                                {
+                                    HStack {
+                                        Text("Window nadir")
+                                        Spacer()
+                                        Text("\(nadirValue) mg/dL")
+                                    }
+
+                                    HStack {
+                                        Text("Δ to nadir")
+                                        Spacer()
+
+                                        let delta = nadirValue - start
+
+                                        Text(
+                                            delta > 0 ?
+                                                "+\(delta) mg/dL" :
+                                                "\(delta) mg/dL"
+                                        )
+                                    }
+
+                                    HStack {
+                                        Text("Time to nadir")
+                                        Spacer()
+
+                                        let minutes = Int(
+                                            nadir.dateString
+                                                .timeIntervalSince(doseDate) / 60
+                                        )
+
+                                        Text("\(max(minutes, 0)) min")
+                                    }
+                                }
+
+                                Text(
+                                    "Observed only — glucose changes may reflect food, " +
+                                        "pump insulin, basal insulin, activity, medications, " +
+                                        "caffeine, and other factors."
+                                )
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .padding(.top, 2)
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 34)
+                            .padding(.top, 4)
+                        }
                     }
                 } else if item.type == .carbs {
                     HStack {
