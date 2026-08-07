@@ -183,6 +183,7 @@ struct MainChartView: View {
             ping(data.$glucose),
             ping(data.$activity),
             ping(data.$afrezzaActivity),
+            ping(data.$afrezzaDoses),
             ping(data.$cob),
             ping(data.$isManual),
             ping(data.$announcement),
@@ -911,6 +912,33 @@ struct MainChartCanvas: View {
                         .rotationEffect(data.useInsulinBars ? Angle(degrees: -90) : Angle(degrees: 0))
                         .position(
                             CGPoint(x: textRect.midX, y: textRect.midY)
+                        )
+                }
+            }
+        }
+    }
+
+    private var afrezzaDoseView: some View {
+        ZStack {
+            Path { path in
+                for dot in geom.afrezzaDoseDots {
+                    path.addEllipse(in: dot.rect)
+                }
+            }
+            .fill(Color.green)
+            .stroke(Color.primary, lineWidth: 0.5)
+
+            ForEach(geom.afrezzaDoseDots, id: \.rect.minX) { info in
+                if let text = info.text,
+                   let textRect = info.textRect
+                {
+                    Text(text)
+                        .font(geom.bolusFont)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color.green)
+                        .position(
+                            x: textRect.midX,
+                            y: textRect.midY
                         )
                 }
             }

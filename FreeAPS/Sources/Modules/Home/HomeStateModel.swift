@@ -94,6 +94,7 @@ extension Home {
             glucose: [],
             activity: [],
             afrezzaActivity: [],
+            afrezzaDoses: [],
             cob: [],
             isManual: [],
             tempBasals: [],
@@ -141,6 +142,17 @@ extension Home {
             hidePredictions: false,
             useCarbBars: false
         )
+
+        func logAfrezza(_ cartridgeUnits: Int) {
+            guard cartridgeUnits > 0 else { return }
+
+            let event = AfrezzaDoseEvent(
+                cartridgeUnits: cartridgeUnits,
+                source: .quickAction
+            )
+
+            afrezzaDoseStorage.store(event)
+        }
 
         func startTimer() {
             timer.resume()
@@ -518,7 +530,6 @@ extension Home {
                 let start = DateFilter.day.startDate as Date
                 let end = Date()
                 let modelDuration = AfrezzaModelPreset.afrezza.duration
-
                 let events = afrezzaDoseStorage.recent(
                     since: start.addingTimeInterval(-modelDuration)
                 )
@@ -551,6 +562,7 @@ extension Home {
                 }
 
                 data.afrezzaActivity = samples
+                data.afrezzaDoses = events
             }
         }
 

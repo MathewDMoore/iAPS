@@ -5,6 +5,7 @@ class ChartModel: ObservableObject {
     @Published var glucose: [BloodGlucose]
     @Published var activity: [IOBTick0]
     @Published var afrezzaActivity: [IOBTick0]
+    @Published var afrezzaDoses: [AfrezzaDoseEvent]
     @Published var cob: [IOBData] // we already have IOBData in storage and it contains COB values
     @Published var isManual: [BloodGlucose]
     @Published var tempBasals: [PumpHistoryEvent]
@@ -57,6 +58,7 @@ class ChartModel: ObservableObject {
         glucose: [BloodGlucose],
         activity: [IOBTick0],
         afrezzaActivity: [IOBTick0],
+        afrezzaDoses: [AfrezzaDoseEvent],
         cob: [IOBData],
         isManual: [BloodGlucose],
         tempBasals: [PumpHistoryEvent],
@@ -108,6 +110,7 @@ class ChartModel: ObservableObject {
         self.glucose = glucose
         self.activity = activity
         self.afrezzaActivity = afrezzaActivity
+        self.afrezzaDoses = afrezzaDoses
         self.cob = cob
         self.isManual = isManual
         self.tempBasals = tempBasals

@@ -20,6 +20,7 @@ struct CalculatedGeometries {
     let predictionDotsZT: [CGRect]
     let predictionDotsUAM: [CGRect]
     let bolusDots: [DotInfo]
+    let afrezzaDoseDots: [DotInfo]
     let bolusPath: Path
     let tempBasalPath: Path
     let regularBasalPath: Path
@@ -261,6 +262,7 @@ private final class GeometriesBuilder {
         let unSmoothedGlucoseDots = calculateUnSmoothedGlucoseDots()
 
         let bolusDots = calculateBolusDots()
+        let afrezzaDoseDots = calculateAfrezzaDoseDots()
         let bolusPath = data.useInsulinBars ? insulinBarsPath(bolusDots) : insulinCirclesPath(bolusDots)
 
         let carbsDots = calculateCarbsDots()
@@ -307,6 +309,7 @@ private final class GeometriesBuilder {
             predictionDotsZT: predictionDotsZT,
             predictionDotsUAM: predictionDotsUAM,
             bolusDots: bolusDots,
+            afrezzaDoseDots: afrezzaDoseDots,
             bolusPath: bolusPath,
             tempBasalPath: tempBasalPath,
             regularBasalPath: regularBasalPath,
@@ -600,6 +603,41 @@ private final class GeometriesBuilder {
         glucose.map { value -> CGRect in
             let position = unSmoothedGlucoseToCoordinate(value)
             return CGRect(x: position.x - 2, y: position.y - 2, width: 4, height: 4)
+        }
+    }
+
+    private func calculateAfrezzaDoseDots() -> [DotInfo] {
+        data.afrezzaDoses.map { event in
+            let center = timeToInterpolatedPoint(
+                event.date.timeIntervalSince1970
+            )
+
+            let size: CGFloat = 11
+            let rect = CGRect(
+                x: center.x - size / 2,
+                y: center.y - size / 2,
+                width: size,
+                height: size
+            )
+
+            let text = "\(event.cartridgeUnits)U"
+            let stringSize = textSize(text: text, font: bolusUIFont)
+            let textRect = CGRect(
+                origin: CGPoint(
+                    x: rect.midX - stringSize.width / 2,
+                    y: rect.minY -
+                        ChartConfig.insulinCarbLabelMargin -
+                        stringSize.height
+                ),
+                size: stringSize
+            )
+
+            return DotInfo(
+                rect: rect,
+                value: Decimal(event.cartridgeUnits),
+                text: text,
+                textRect: textRect
+            )
         }
     }
 

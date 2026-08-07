@@ -10,6 +10,7 @@ extension DataTable {
         @Injected() var aps: APSManager!
         @Injected() private var nightscout: NightscoutManager!
         @Injected() var pumpHistoryStorage: PumpHistoryStorage!
+        @Injected() var afrezzaDoseStorage: AfrezzaDoseStorage!
 
         let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
 
@@ -38,6 +39,7 @@ extension DataTable {
             setupGlucose()
             broadcaster.register(SettingsObserver.self, observer: self)
             broadcaster.register(PumpHistoryObserver.self, observer: self)
+            broadcaster.register(AfrezzaDoseObserver.self, observer: self)
             broadcaster.register(TempTargetsObserver.self, observer: self)
             broadcaster.register(CarbsObserver.self, observer: self)
             broadcaster.register(GlucoseObserver.self, observer: self)
@@ -89,6 +91,19 @@ extension DataTable {
                         )
                     }
 
+                let afrezza = self.afrezzaDoseStorage.all()
+                    .map {
+                        Treatment(
+                            units: units,
+                            type: .afrezza,
+                            date: $0.date,
+                            creationDate: $0.date,
+                            amount: Decimal($0.cartridgeUnits),
+                            id: $0.id,
+                            note: $0.note ?? $0.source.rawValue
+                        )
+                    }
+
                 let tempBasals = self.provider.pumpHistory()
                     .filter { $0.type == .tempBasal || $0.type == .tempBasalDuration }
                     .chunks(ofCount: 2)
@@ -133,7 +148,7 @@ extension DataTable {
                     }
 
                 DispatchQueue.main.async {
-                    self.treatments = [carbs, boluses, tempBasals, tempTargets, suspend, resume]
+                    self.treatments = [carbs, boluses, afrezza, tempBasals, tempTargets, suspend, resume]
                         .flatMap { $0 }
                         .sorted { $0.date > $1.date }
                 }
@@ -335,5 +350,11 @@ extension DataTable.StateModel:
 
     func glucoseDidUpdate(_: [BloodGlucose]) {
         setupGlucose()
+    }
+}
+
+extension DataTable.StateModel: AfrezzaDoseObserver {
+    func afrezzaDosesDidUpdate(_: [AfrezzaDoseEvent]) {
+        setupTreatments()
     }
 }

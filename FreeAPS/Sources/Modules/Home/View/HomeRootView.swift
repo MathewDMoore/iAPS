@@ -342,6 +342,43 @@ extension Home {
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(.insulin)
+
+                        HStack(spacing: 6) {
+                            Button {
+                                state.logAfrezza(4)
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            } label: {
+                                Text("4U")
+                                    .font(.caption.bold())
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.green.opacity(0.16))
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.green)
+                            .accessibilityLabel("Log 4 unit Afrezza cartridge")
+
+                            Button {
+                                state.logAfrezza(8)
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            } label: {
+                                Text("8U")
+                                    .font(.caption.bold())
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.green.opacity(0.16))
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.green)
+                            .accessibilityLabel("Log 8 unit Afrezza cartridge")
+                        }
+
                         Spacer()
                         if state.allowManualTemp {
                             Button { state.showModal(for: .manualTempBasal) }

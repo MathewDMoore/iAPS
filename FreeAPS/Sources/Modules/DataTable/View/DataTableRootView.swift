@@ -346,6 +346,88 @@ extension DataTable {
                         }
                     }
 
+                } else if item.type == .afrezza {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "wind")
+                                .foregroundStyle(.green)
+
+                            Text("Afrezza")
+
+                            if let amount = item.amount {
+                                Text("\(amount) U")
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Text(dateFormatter.string(from: item.date))
+                                .moveDisabled(true)
+                        }
+
+                        HStack(spacing: 6) {
+                            Text("Onset 12m")
+
+                            Spacer()
+
+                            Text("▲ Peak 40m")
+
+                            Spacer()
+
+                            Text("End 90m")
+                        }
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 34)
+
+                        GeometryReader { geometry in
+                            let width = geometry.size.width
+
+                            ZStack(alignment: .leading) {
+                                Capsule()
+                                    .fill(Color.secondary.opacity(0.18))
+                                    .frame(height: 4)
+
+                                Capsule()
+                                    .fill(Color.green.opacity(0.7))
+                                    .frame(height: 4)
+
+                                Circle()
+                                    .fill(Color.green)
+                                    .frame(width: 8, height: 8)
+                                    .offset(
+                                        x: max(
+                                            0,
+                                            width * CGFloat(
+                                                AfrezzaModelPreset.afrezza.onset /
+                                                    AfrezzaModelPreset.afrezza.duration
+                                            ) - 4
+                                        )
+                                    )
+
+                                Image(systemName: "triangle.fill")
+                                    .font(.system(size: 8))
+                                    .foregroundStyle(.green)
+                                    .offset(
+                                        x: max(
+                                            0,
+                                            width * CGFloat(
+                                                AfrezzaModelPreset.timeToPeak /
+                                                    AfrezzaModelPreset.afrezza.duration
+                                            ) - 4
+                                        ),
+                                        y: -7
+                                    )
+
+                                Circle()
+                                    .fill(Color.green)
+                                    .frame(width: 8, height: 8)
+                                    .offset(x: max(0, width - 8))
+                            }
+                        }
+                        .frame(height: 10)
+                        .padding(.leading, 34)
+                    }
                 } else if item.type == .carbs {
                     HStack {
                         Image(systemName: "circle.fill").foregroundStyle(item.color)
@@ -407,7 +489,13 @@ extension DataTable {
                             isRemoveHistoryItemAlertPresented = true
                         }
                     ).tint(.red)
-                }.disabled(item.type == .tempBasal || item.type == .tempTarget || item.type == .resume || item.type == .suspend)
+                }.disabled(
+                    item.type == .tempBasal ||
+                        item.type == .tempTarget ||
+                        item.type == .resume ||
+                        item.type == .suspend ||
+                        item.type == .afrezza
+                )
                 .alert(
                     Text(NSLocalizedString(alertTitle, comment: "")),
                     isPresented: $isRemoveHistoryItemAlertPresented
