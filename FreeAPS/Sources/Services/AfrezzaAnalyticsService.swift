@@ -73,19 +73,21 @@ final class AfrezzaAnalyticsService {
             )
         }()
 
+        let isComplete = now >= endDate
+
         return AfrezzaSession(
             dose: dose,
             glucoseAtDose: glucoseAtDose?.glucose,
             glucose30: glucose30?.glucose,
             glucose60: glucose60?.glucose,
             glucose90: glucose90?.glucose,
-            nadirGlucose: nadirReading?.glucose,
-            nadirDate: nadirReading?.dateString,
-            peakGlucose: peakReading?.glucose,
-            peakDate: peakReading?.dateString,
-            deltaToNadir: deltaToNadir,
-            minutesToNadir: minutesToNadir,
-            isComplete: now >= endDate
+            nadirGlucose: isComplete ? nadirReading?.glucose : nil,
+            nadirDate: isComplete ? nadirReading?.dateString : nil,
+            peakGlucose: isComplete ? peakReading?.glucose : nil,
+            peakDate: isComplete ? peakReading?.dateString : nil,
+            deltaToNadir: isComplete ? deltaToNadir : nil,
+            minutesToNadir: isComplete ? minutesToNadir : nil,
+            isComplete: isComplete
         )
     }
 

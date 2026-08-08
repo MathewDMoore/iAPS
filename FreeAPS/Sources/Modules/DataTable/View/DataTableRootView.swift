@@ -434,8 +434,26 @@ extension DataTable {
 
                             if let start = session.glucoseAtDose {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Observed glucose response")
-                                        .font(.caption.bold())
+                                    HStack {
+                                        Text("Observed glucose response")
+                                            .font(.caption.bold())
+
+                                        Spacer()
+
+                                        if session.isComplete {
+                                            Label(
+                                                "Complete",
+                                                systemImage: "checkmark.circle.fill"
+                                            )
+                                            .foregroundStyle(.green)
+                                        } else {
+                                            Label(
+                                                "In progress",
+                                                systemImage: "clock"
+                                            )
+                                            .foregroundStyle(.secondary)
+                                        }
+                                    }
 
                                     HStack {
                                         Text("At dose")
@@ -470,12 +488,13 @@ extension DataTable {
                                         )
                                     }
 
-                                    if let value = session.glucose90 {
+                                    if !session.isComplete {
                                         HStack {
-                                            Text("+90 min")
+                                            Text("Final window metrics")
                                             Spacer()
-                                            Text("\(value) mg/dL")
+                                            Text("Waiting…")
                                         }
+                                        .foregroundStyle(.secondary)
                                     }
 
                                     if let nadirValue = session.nadirGlucose {
