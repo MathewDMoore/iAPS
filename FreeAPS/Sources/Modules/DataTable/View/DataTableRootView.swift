@@ -347,232 +347,179 @@ extension DataTable {
                     }
 
                 } else if item.type == .afrezza {
-                    let doseDate = item.date
-                    let duration = AfrezzaModelPreset.afrezza.duration
+                    if let dose = state.afrezzaDoses.first(
+                        where: { $0.id == item.id }
+                    ) {
+                        let session = AfrezzaAnalyticsService().session(
+                            for: dose,
+                            glucose: state.glucose.map(\.glucose)
+                        )
 
-                    let readings = state.glucose
-                        .map(\.glucose)
-                        .filter {
-                            $0.dateString >= doseDate.addingTimeInterval(-7.5 * 60) &&
-                                $0.dateString <= doseDate.addingTimeInterval(duration)
-                        }
-                        .sorted { $0.dateString < $1.dateString }
-
-                    let doseReading = readings.min {
-                        abs($0.dateString.timeIntervalSince(doseDate)) <
-                            abs($1.dateString.timeIntervalSince(doseDate))
-                    }
-
-                    let windowReadings = readings.filter {
-                        $0.dateString >= doseDate &&
-                            $0.dateString <= doseDate.addingTimeInterval(duration)
-                    }
-
-                    let nadirReading = windowReadings
-                        .filter { $0.glucose != nil }
-                        .min {
-                            ($0.glucose ?? Int.max) < ($1.glucose ?? Int.max)
-                        }
-
-                    let reading30 = readings.min {
-                        abs(
-                            $0.dateString.timeIntervalSince(
-                                doseDate.addingTimeInterval(30 * 60)
-                            )
-                        ) <
-                            abs(
-                                $1.dateString.timeIntervalSince(
-                                    doseDate.addingTimeInterval(30 * 60)
-                                )
-                            )
-                    }
-
-                    let reading60 = readings.min {
-                        abs(
-                            $0.dateString.timeIntervalSince(
-                                doseDate.addingTimeInterval(60 * 60)
-                            )
-                        ) <
-                            abs(
-                                $1.dateString.timeIntervalSince(
-                                    doseDate.addingTimeInterval(60 * 60)
-                                )
-                            )
-                    }
-
-                    let reading90 = readings.min {
-                        abs(
-                            $0.dateString.timeIntervalSince(
-                                doseDate.addingTimeInterval(90 * 60)
-                            )
-                        ) <
-                            abs(
-                                $1.dateString.timeIntervalSince(
-                                    doseDate.addingTimeInterval(90 * 60)
-                                )
-                            )
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: "wind")
-                                .foregroundStyle(.green)
-
-                            Text("Afrezza")
-
-                            if let amount = item.amount {
-                                Text("\(amount) U")
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Spacer()
-
-                            Text(dateFormatter.string(from: item.date))
-                                .moveDisabled(true)
-                        }
-
-                        HStack(spacing: 6) {
-                            Text("Onset 12m")
-                            Spacer()
-                            Text("▲ Peak 40m")
-                            Spacer()
-                            Text("End 90m")
-                        }
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .padding(.leading, 34)
-
-                        GeometryReader { geometry in
-                            let width = geometry.size.width
-
-                            ZStack(alignment: .leading) {
-                                Capsule()
-                                    .fill(Color.secondary.opacity(0.18))
-                                    .frame(height: 4)
-
-                                Capsule()
-                                    .fill(Color.green.opacity(0.7))
-                                    .frame(height: 4)
-
-                                Circle()
-                                    .fill(Color.green)
-                                    .frame(width: 8, height: 8)
-                                    .offset(
-                                        x: max(
-                                            0,
-                                            width * CGFloat(
-                                                AfrezzaModelPreset.afrezza.onset /
-                                                    AfrezzaModelPreset.afrezza.duration
-                                            ) - 4
-                                        )
-                                    )
-
-                                Image(systemName: "triangle.fill")
-                                    .font(.system(size: 8))
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "wind")
                                     .foregroundStyle(.green)
-                                    .offset(
-                                        x: max(
-                                            0,
-                                            width * CGFloat(
-                                                AfrezzaModelPreset.timeToPeak /
-                                                    AfrezzaModelPreset.afrezza.duration
-                                            ) - 4
-                                        ),
-                                        y: -7
-                                    )
 
-                                Circle()
-                                    .fill(Color.green)
-                                    .frame(width: 8, height: 8)
-                                    .offset(x: max(0, width - 8))
-                            }
-                        }
-                        .frame(height: 10)
-                        .padding(.leading, 34)
+                                Text("Afrezza")
 
-                        if let start = doseReading?.glucose {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Observed glucose response")
-                                    .font(.caption.bold())
-
-                                HStack {
-                                    Text("At dose")
-                                    Spacer()
-                                    Text("\(start) mg/dL")
+                                if let amount = item.amount {
+                                    Text("\(amount) U")
+                                        .foregroundStyle(.secondary)
                                 }
 
-                                if let value = reading30?.glucose {
+                                Spacer()
+
+                                Text(dateFormatter.string(from: item.date))
+                                    .moveDisabled(true)
+                            }
+
+                            HStack(spacing: 6) {
+                                Text("Onset 12m")
+                                Spacer()
+                                Text("▲ Peak 40m")
+                                Spacer()
+                                Text("End 90m")
+                            }
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 34)
+
+                            GeometryReader { geometry in
+                                let width = geometry.size.width
+
+                                ZStack(alignment: .leading) {
+                                    Capsule()
+                                        .fill(Color.secondary.opacity(0.18))
+                                        .frame(height: 4)
+
+                                    Capsule()
+                                        .fill(Color.green.opacity(0.7))
+                                        .frame(height: 4)
+
+                                    Circle()
+                                        .fill(Color.green)
+                                        .frame(width: 8, height: 8)
+                                        .offset(
+                                            x: max(
+                                                0,
+                                                width * CGFloat(
+                                                    AfrezzaModelPreset.afrezza.onset /
+                                                        AfrezzaModelPreset.afrezza.duration
+                                                ) - 4
+                                            )
+                                        )
+
+                                    Image(systemName: "triangle.fill")
+                                        .font(.system(size: 8))
+                                        .foregroundStyle(.green)
+                                        .offset(
+                                            x: max(
+                                                0,
+                                                width * CGFloat(
+                                                    AfrezzaModelPreset.timeToPeak /
+                                                        AfrezzaModelPreset.afrezza.duration
+                                                ) - 4
+                                            ),
+                                            y: -7
+                                        )
+
+                                    Circle()
+                                        .fill(Color.green)
+                                        .frame(width: 8, height: 8)
+                                        .offset(x: max(0, width - 8))
+                                }
+                            }
+                            .frame(height: 10)
+                            .padding(.leading, 34)
+
+                            if let start = session.glucoseAtDose {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Observed glucose response")
+                                        .font(.caption.bold())
+
+                                    HStack {
+                                        Text("At dose")
+                                        Spacer()
+                                        Text("\(start) mg/dL")
+                                    }
+
                                     HStack {
                                         Text("+30 min")
                                         Spacer()
-                                        Text("\(value) mg/dL")
+                                        Text(
+                                            session.glucose30.map { "\($0) mg/dL" } ??
+                                                "Waiting…"
+                                        )
                                     }
-                                }
 
-                                if let value = reading60?.glucose {
                                     HStack {
                                         Text("+60 min")
                                         Spacer()
-                                        Text("\(value) mg/dL")
+                                        Text(
+                                            session.glucose60.map { "\($0) mg/dL" } ??
+                                                "Waiting…"
+                                        )
                                     }
-                                }
 
-                                if let value = reading90?.glucose {
                                     HStack {
                                         Text("+90 min")
                                         Spacer()
-                                        Text("\(value) mg/dL")
-                                    }
-                                }
-
-                                if let nadir = nadirReading,
-                                   let nadirValue = nadir.glucose
-                                {
-                                    HStack {
-                                        Text("Window nadir")
-                                        Spacer()
-                                        Text("\(nadirValue) mg/dL")
-                                    }
-
-                                    HStack {
-                                        Text("Δ to nadir")
-                                        Spacer()
-
-                                        let delta = nadirValue - start
-
                                         Text(
-                                            delta > 0 ?
-                                                "+\(delta) mg/dL" :
-                                                "\(delta) mg/dL"
+                                            session.glucose90.map { "\($0) mg/dL" } ??
+                                                "Waiting…"
                                         )
                                     }
 
-                                    HStack {
-                                        Text("Time to nadir")
-                                        Spacer()
-
-                                        let minutes = Int(
-                                            nadir.dateString
-                                                .timeIntervalSince(doseDate) / 60
-                                        )
-
-                                        Text("\(max(minutes, 0)) min")
+                                    if let value = session.glucose90 {
+                                        HStack {
+                                            Text("+90 min")
+                                            Spacer()
+                                            Text("\(value) mg/dL")
+                                        }
                                     }
+
+                                    if let nadirValue = session.nadirGlucose {
+                                        HStack {
+                                            Text("Window nadir")
+                                            Spacer()
+                                            Text("\(nadirValue) mg/dL")
+                                        }
+                                    }
+
+                                    if let delta = session.deltaToNadir {
+                                        HStack {
+                                            Text("Δ to nadir")
+                                            Spacer()
+                                            Text(
+                                                delta > 0 ?
+                                                    "+\(delta) mg/dL" :
+                                                    "\(delta) mg/dL"
+                                            )
+                                        }
+                                    }
+
+                                    if let minutes = session.minutesToNadir {
+                                        HStack {
+                                            Text("Time to nadir")
+                                            Spacer()
+                                            Text("\(minutes) min")
+                                        }
+                                    }
+
+                                    Text(
+                                        "Observed only — glucose changes may reflect food, " +
+                                            "pump insulin, basal insulin, activity, medications, " +
+                                            "caffeine, and other factors."
+                                    )
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.top, 2)
                                 }
-
-                                Text(
-                                    "Observed only — glucose changes may reflect food, " +
-                                        "pump insulin, basal insulin, activity, medications, " +
-                                        "caffeine, and other factors."
-                                )
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
-                                .padding(.top, 2)
+                                .padding(.leading, 34)
+                                .padding(.top, 4)
                             }
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.leading, 34)
-                            .padding(.top, 4)
                         }
                     }
                 } else if item.type == .carbs {

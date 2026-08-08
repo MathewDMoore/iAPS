@@ -17,6 +17,7 @@ extension DataTable {
         @Published var mode: Mode = .treatments
         @Published var treatments: [Treatment] = []
         @Published var glucose: [Glucose] = []
+        @Published var afrezzaDoses: [AfrezzaDoseEvent] = []
         @Published var manualGlucose: Decimal = 0
         @Published var maxBolus: Decimal = 0
         @Published var externalInsulinAmount: Decimal = 0
@@ -91,7 +92,9 @@ extension DataTable {
                         )
                     }
 
-                let afrezza = self.afrezzaDoseStorage.all()
+                let afrezzaEvents = self.afrezzaDoseStorage.all()
+
+                let afrezza = afrezzaEvents
                     .map {
                         Treatment(
                             units: units,
@@ -148,6 +151,7 @@ extension DataTable {
                     }
 
                 DispatchQueue.main.async {
+                    self.afrezzaDoses = afrezzaEvents
                     self.treatments = [carbs, boluses, afrezza, tempBasals, tempTargets, suspend, resume]
                         .flatMap { $0 }
                         .sorted { $0.date > $1.date }
