@@ -533,6 +533,62 @@ extension DataTable {
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                                     .padding(.top, 2)
+
+                                    let summary = AfrezzaAnalyticsService()
+                                        .responseSummary(
+                                            cartridgeUnits: dose.cartridgeUnits,
+                                            doses: state.afrezzaDoses,
+                                            glucose: state.glucose.map(\.glucose)
+                                        )
+
+                                    let newestDoseID = state.afrezzaDoses
+                                        .max { $0.date < $1.date }?
+                                        .id
+
+                                    if dose.id == newestDoseID {
+                                        Divider()
+                                            .padding(.vertical, 4)
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Observed \(dose.cartridgeUnits) U history")
+                                                .font(.caption.bold())
+
+                                            HStack {
+                                                Text("Completed sessions")
+                                                Spacer()
+                                                Text("\(summary.completedSessions)")
+                                            }
+
+                                            if let delta = summary.medianDeltaToNadir {
+                                                HStack {
+                                                    Text("Median Δ to nadir")
+                                                    Spacer()
+                                                    Text(
+                                                        delta > 0 ?
+                                                            "+\(delta) mg/dL" :
+                                                            "\(delta) mg/dL"
+                                                    )
+                                                }
+                                            }
+
+                                            if let minutes = summary.medianMinutesToNadir {
+                                                HStack {
+                                                    Text("Median time to nadir")
+                                                    Spacer()
+                                                    Text("\(minutes) min")
+                                                }
+                                            }
+
+                                            if summary.completedSessions < 3 {
+                                                Label(
+                                                    "Learning — more comparable sessions are needed.",
+                                                    systemImage: "brain"
+                                                )
+                                                .font(.caption2)
+                                                .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                    }
                                 }
                                 .font(.caption)
                                 .foregroundStyle(.secondary)

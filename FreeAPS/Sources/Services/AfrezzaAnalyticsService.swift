@@ -1,6 +1,13 @@
 import Foundation
 
 final class AfrezzaAnalyticsService {
+    struct ResponseSummary {
+        let cartridgeUnits: Int
+        let completedSessions: Int
+        let medianDeltaToNadir: Int?
+        let medianMinutesToNadir: Int?
+    }
+
     private let checkpointTolerance: TimeInterval = 7.5 * 60
 
     func session(
@@ -89,6 +96,51 @@ final class AfrezzaAnalyticsService {
             minutesToNadir: isComplete ? minutesToNadir : nil,
             isComplete: isComplete
         )
+    }
+
+    func responseSummary(
+        cartridgeUnits: Int,
+        doses: [AfrezzaDoseEvent],
+        glucose: [BloodGlucose],
+        at now: Date = .now
+    ) -> ResponseSummary {
+        let completed = doses
+            .filter { $0.cartridgeUnits == cartridgeUnits }
+            .map {
+                session(
+                    for: $0,
+                    glucose: glucose,
+                    at: now
+                )
+            }
+            .filter(\.isComplete)
+
+        let deltas = completed.compactMap(\.deltaToNadir)
+        let times = completed.compactMap(\.minutesToNadir)
+
+        return ResponseSummary(
+            cartridgeUnits: cartridgeUnits,
+            completedSessions: completed.count,
+            medianDeltaToNadir: median(deltas),
+            medianMinutesToNadir: median(times)
+        )
+    }
+
+    private func median(_ values: [Int]) -> Int? {
+        guard !values.isEmpty else {
+            return nil
+        }
+
+        let sorted = values.sorted()
+        let middle = sorted.count / 2
+
+        if sorted.count.isMultiple(of: 2) {
+            return Int(
+                (Double(sorted[middle - 1]) + Double(sorted[middle])) / 2.0
+            )
+        }
+
+        return sorted[middle]
     }
 
     private func checkpoint(
