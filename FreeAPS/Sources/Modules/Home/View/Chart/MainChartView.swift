@@ -2,6 +2,7 @@ import Algorithms
 import Combine
 import SwiftDate
 import SwiftUI
+import UIKit
 
 enum PredictionType: Hashable {
     case iob
@@ -238,6 +239,8 @@ struct MainChartCanvas: View {
     let data: ChartModel
     @Binding var scrollTrigger: Int
 
+    @State private var inspectedGlucoseIndex: Int?
+
     private enum Command {
         static let open = "🔴"
         static let closed = "🟢"
@@ -275,6 +278,7 @@ struct MainChartCanvas: View {
         ZStack {
             yGridView
             mainScrollView
+            chartInspectorOverlay
             if data.yGridLabels {
                 glucoseLabelsView
             }
@@ -359,6 +363,133 @@ struct MainChartCanvas: View {
                         }
                 }
             }
+        }
+        .background(
+            ChartScrollGestureBridge(
+                onLongPressChanged: { contentX in
+                    let index = nearestMeasuredGlucoseIndex(to: contentX)
+                    inspectedGlucoseIndex = index
+
+                    if let index,
+                       index < geom.glucoseDots.count,
+                       index < sortedMeasuredGlucose.count
+                    {
+                        let selectedDotX =
+                            geom.glucoseDots[index].rect.midX
+
+                        let selectedDate =
+                            sortedMeasuredGlucose[index].dateString
+
+                        print(
+                            "CHART MAP:",
+                            "touchContentX =", contentX,
+                            "selectedDotX =", selectedDotX,
+                            "difference =", contentX - selectedDotX,
+                            "selectedDate =", selectedDate,
+                            "fullWidth =", geom.fullGlucoseWidth,
+                            "extraWidth =", geom.additionalWidth,
+                            "currentTimeX =", geom.currentTimeX
+                        )
+                    }
+
+                    if let eventIndex = data.afrezzaDoses.indices.min(by: {
+                        abs(
+                            geom.afrezzaDoseDots[$0].rect.midX -
+                                contentX
+                        ) <
+                            abs(
+                                geom.afrezzaDoseDots[$1].rect.midX -
+                                    contentX
+                            )
+                    }),
+                       eventIndex < geom.afrezzaDoseDots.count
+                    {
+                        print(
+                            "AFREZZA MAP:",
+                            "doseDate =", data.afrezzaDoses[eventIndex].date,
+                            "dose =", data.afrezzaDoses[eventIndex].cartridgeUnits,
+                            "markerX =", geom.afrezzaDoseDots[eventIndex].rect.midX,
+                            "touchContentX =", contentX,
+                            "difference =",
+                            contentX -
+                                geom.afrezzaDoseDots[eventIndex].rect.midX
+                        )
+                    }
+                },
+                onLongPressEnded: {
+                    inspectedGlucoseIndex = nil
+                }
+            )
+            .frame(width: 1, height: 1)
+            .allowsHitTesting(false)
+        )
+    }
+
+    private var sortedMeasuredGlucose: [BloodGlucose] {
+        data.glucose.sorted { $0.dateString < $1.dateString }
+    }
+
+    private func nearestMeasuredGlucoseIndex(to x: CGFloat) -> Int? {
+        guard !geom.glucoseDots.isEmpty else {
+            return nil
+        }
+
+        return geom.glucoseDots.indices.min {
+            abs(geom.glucoseDots[$0].rect.midX - x) <
+                abs(geom.glucoseDots[$1].rect.midX - x)
+        }
+    }
+
+    @ViewBuilder private var chartInspectorOverlay: some View {
+        if let index = inspectedGlucoseIndex,
+           index < geom.glucoseDots.count,
+           index < sortedMeasuredGlucose.count
+        {
+            let reading = sortedMeasuredGlucose[index]
+            let dot = geom.glucoseDots[index].rect
+            let glucose = reading.glucose ?? reading.sgv ?? 0
+
+            GeometryReader { proxy in
+                let visibleWidth = proxy.size.width
+
+                ZStack(alignment: .topLeading) {
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.65))
+                        .frame(width: 1)
+                        .frame(maxHeight: .infinity)
+                        .position(
+                            x: min(max(dot.midX, 0), visibleWidth),
+                            y: proxy.size.height / 2
+                        )
+
+                    VStack(spacing: 1) {
+                        Text(
+                            reading.dateString.formatted(
+                                date: .omitted,
+                                time: .shortened
+                            )
+                        )
+                        .font(.caption.bold())
+
+                        Text("\(glucose) mg/dL")
+                            .font(.caption2)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.regularMaterial)
+                    )
+                    .position(
+                        x: min(
+                            max(dot.midX, 75),
+                            max(75, visibleWidth - 75)
+                        ),
+                        y: 30
+                    )
+                }
+            }
+            .allowsHitTesting(false)
         }
     }
 
@@ -1057,6 +1188,178 @@ struct MainChartCanvas: View {
                     path.addEllipse(in: rect)
                 }
             }.fill(Color.uam.opacity(colorScheme == .dark ? 0.8 : 0.9))
+        }
+    }
+}
+
+private struct ChartScrollGestureBridge: UIViewRepresentable {
+    let onLongPressChanged: (CGFloat) -> Void
+    let onLongPressEnded: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            onLongPressChanged: onLongPressChanged,
+            onLongPressEnded: onLongPressEnded
+        )
+    }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.isUserInteractionEnabled = false
+
+        DispatchQueue.main.async {
+            context.coordinator.install(from: view)
+        }
+
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        context.coordinator.onLongPressChanged = onLongPressChanged
+        context.coordinator.onLongPressEnded = onLongPressEnded
+
+        DispatchQueue.main.async {
+            context.coordinator.install(from: uiView)
+        }
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        var onLongPressChanged: (CGFloat) -> Void
+        var onLongPressEnded: () -> Void
+
+        private weak var scrollView: UIScrollView?
+        private weak var longPress: UILongPressGestureRecognizer?
+
+        init(
+            onLongPressChanged: @escaping (CGFloat) -> Void,
+            onLongPressEnded: @escaping () -> Void
+        ) {
+            self.onLongPressChanged = onLongPressChanged
+            self.onLongPressEnded = onLongPressEnded
+        }
+
+        func install(from view: UIView) {
+            guard longPress == nil else {
+                return
+            }
+
+            guard let root = view.window else {
+                return
+            }
+
+            var candidates: [UIScrollView] = []
+
+            func collectScrollViews(from current: UIView) {
+                if let scroll = current as? UIScrollView {
+                    candidates.append(scroll)
+                }
+
+                for child in current.subviews {
+                    collectScrollViews(from: child)
+                }
+            }
+
+            collectScrollViews(from: root)
+
+            print("===== ALL UIScrollView CANDIDATES =====")
+
+            for (index, scroll) in candidates.enumerated() {
+                let horizontal =
+                    scroll.contentSize.width > scroll.bounds.width + 1
+
+                let vertical =
+                    scroll.contentSize.height > scroll.bounds.height + 1
+
+                print(
+                    "SCROLL", index,
+                    "frame =", scroll.frame,
+                    "bounds =", scroll.bounds,
+                    "contentSize =", scroll.contentSize,
+                    "offset =", scroll.contentOffset,
+                    "horizontal =", horizontal,
+                    "vertical =", vertical
+                )
+            }
+
+            if let horizontalScroll = candidates.first(where: {
+                $0.contentSize.width > $0.bounds.width + 1 &&
+                    $0.bounds.width > 250 &&
+                    $0.bounds.height > 250
+            }) {
+                print(
+                    "CHART HORIZONTAL SCROLL FOUND:",
+                    "frame =", horizontalScroll.frame,
+                    "contentSize =", horizontalScroll.contentSize,
+                    "offset =", horizontalScroll.contentOffset
+                )
+
+                install(on: horizontalScroll)
+            } else {
+                print("CHART HORIZONTAL SCROLL NOT FOUND")
+            }
+        }
+
+        private func install(on scrollView: UIScrollView) {
+            guard longPress == nil else {
+                return
+            }
+
+            self.scrollView = scrollView
+
+            let recognizer = UILongPressGestureRecognizer(
+                target: self,
+                action: #selector(handleLongPress(_:))
+            )
+
+            recognizer.minimumPressDuration = 0.25
+            recognizer.allowableMovement = 14
+            recognizer.cancelsTouchesInView = false
+            recognizer.delegate = self
+
+            scrollView.addGestureRecognizer(recognizer)
+
+            longPress = recognizer
+        }
+
+        @objc private func handleLongPress(
+            _ recognizer: UILongPressGestureRecognizer
+        ) {
+            guard let scrollView else {
+                return
+            }
+
+            switch recognizer.state {
+            case .began,
+                 .changed:
+                let locationInScroll = recognizer.location(in: scrollView)
+                let locationInContent = recognizer.location(
+                    in: scrollView.subviews.first
+                )
+
+                print(
+                    "CHART INSPECTOR:",
+                    "scrollX =", locationInScroll.x,
+                    "contentX =", locationInContent.x,
+                    "offsetX =", scrollView.contentOffset.x
+                )
+
+                onLongPressChanged(locationInContent.x)
+
+            case .cancelled,
+                 .ended,
+                 .failed:
+                onLongPressEnded()
+
+            default:
+                break
+            }
+        }
+
+        func gestureRecognizer(
+            _: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
+        ) -> Bool {
+            true
         }
     }
 }

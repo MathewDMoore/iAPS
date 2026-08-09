@@ -7,11 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AFA000033020260400000003 /* AfrezzaModelPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A81300F439500685AE2 /* AfrezzaModelPreset.swift */; };
-		AFA100023020260700000002 /* AfrezzaSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA100013020260700000001 /* AfrezzaSession.swift */; };
-		AFA100043020260700000004 /* AfrezzaAnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA100033020260700000003 /* AfrezzaAnalyticsService.swift */; };
-		AFA000023020260300000002 /* AfrezzaPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A80300F438A00685AE2 /* AfrezzaPreferences.swift */; };
-		AFA000013020260300000001 /* AfrezzaSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A83300F43CB00685AE2 /* AfrezzaSettingsView.swift */; };
 		041D1E995A6AE92E9289DC49 /* BolusDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D1A7CA8C10C4403D4BBFA7 /* BolusDataFlow.swift */; };
 		0437CE46C12535A56504EC19 /* SnoozeRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5822B15939E719628E9FF7C /* SnoozeRootView.swift */; };
 		056EB47E2B4C8B3D00CDE36E /* SystemSoundsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056EB47D2B4C8B3D00CDE36E /* SystemSoundsManager.swift */; };
@@ -366,6 +361,11 @@
 		A33352ED40476125EBAC6EE0 /* CREditorDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E22146D3DF4853786C78132 /* CREditorDataFlow.swift */; };
 		A6F097A14CAAE0CE0D11BE1B /* AddCarbsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 618E62C9757B2F95431B5DC0 /* AddCarbsProvider.swift */; };
 		AD3D2CD42CD01B9EB8F26522 /* PumpConfigDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF65DA88F972B56090AD6AC3 /* PumpConfigDataFlow.swift */; };
+		AFA000013020260300000001 /* AfrezzaSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A83300F43CB00685AE2 /* AfrezzaSettingsView.swift */; };
+		AFA000023020260300000002 /* AfrezzaPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A80300F438A00685AE2 /* AfrezzaPreferences.swift */; };
+		AFA000033020260400000003 /* AfrezzaModelPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A81300F439500685AE2 /* AfrezzaModelPreset.swift */; };
+		AFA100023020260700000002 /* AfrezzaSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA100013020260700000001 /* AfrezzaSession.swift */; };
+		AFA100043020260700000004 /* AfrezzaAnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA100033020260700000003 /* AfrezzaAnalyticsService.swift */; };
 		B7C465E9472624D8A2BE2A6A /* CalibrationsDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA241FB1663EC96FDBE64C8A /* CalibrationsDataFlow.swift */; };
 		B9CAAEFC2AE70836000F68BC /* branch.txt in Resources */ = {isa = PBXBuildFile; fileRef = B9CAAEFB2AE70836000F68BC /* branch.txt */; };
 		BA00D96F7B2FF169A06FB530 /* CGMStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C018D1680307A31C9ED7120 /* CGMStateModel.swift */; };
@@ -1068,6 +1068,8 @@
 		AAFF91130F2FCCC7EBBA11AD /* BasalProfileEditorStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BasalProfileEditorStateModel.swift; sourceTree = "<group>"; };
 		AEE53A13D26F101B332EFFC8 /* AddTempTargetProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AddTempTargetProvider.swift; sourceTree = "<group>"; };
 		AF65DA88F972B56090AD6AC3 /* PumpConfigDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PumpConfigDataFlow.swift; sourceTree = "<group>"; };
+		AFA100013020260700000001 /* AfrezzaSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaSession.swift; path = FreeAPS/Sources/Models/AfrezzaSession.swift; sourceTree = "<group>"; };
+		AFA100033020260700000003 /* AfrezzaAnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaAnalyticsService.swift; path = FreeAPS/Sources/Services/AfrezzaAnalyticsService.swift; sourceTree = "<group>"; };
 		B5822B15939E719628E9FF7C /* SnoozeRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SnoozeRootView.swift; sourceTree = "<group>"; };
 		B5EF98E22A39CD656A230704 /* AutotuneConfigProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutotuneConfigProvider.swift; sourceTree = "<group>"; };
 		B817FA092B5EE8E0009DC94F /* DanaKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DanaKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1144,8 +1146,6 @@
 		E06B9119275B5EEA003C04B6 /* Array+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Extension.swift"; sourceTree = "<group>"; };
 		E09B0A80300F438A00685AE2 /* AfrezzaPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaPreferences.swift; path = FreeAPS/Sources/Modules/Afrezza/Models/AfrezzaPreferences.swift; sourceTree = "<group>"; };
 		E09B0A81300F439500685AE2 /* AfrezzaModelPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaModelPreset.swift; path = FreeAPS/Sources/Modules/Afrezza/Models/AfrezzaModelPreset.swift; sourceTree = "<group>"; };
-		AFA100013020260700000001 /* AfrezzaSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaSession.swift; path = FreeAPS/Sources/Models/AfrezzaSession.swift; sourceTree = "<group>"; };
-		AFA100033020260700000003 /* AfrezzaAnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaAnalyticsService.swift; path = FreeAPS/Sources/Services/AfrezzaAnalyticsService.swift; sourceTree = "<group>"; };
 		E09B0A82300F439D00685AE2 /* AfrezzaQuickActionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfrezzaQuickActionsView.swift; sourceTree = "<group>"; };
 		E09B0A83300F43CB00685AE2 /* AfrezzaSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AfrezzaSettingsView.swift; path = FreeAPS/Sources/Modules/Afrezza/View/AfrezzaSettingsView.swift; sourceTree = "<group>"; };
 		E0CC2C5B275B9DAE00A7BC71 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
@@ -4224,6 +4224,8 @@
 					"$(PROJECT_DIR)/Dependencies/ios-armv7_arm64",
 				);
 				INFOPLIST_FILE = FreeAPS/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "iAPS+Afrezza";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4278,6 +4280,8 @@
 					"$(PROJECT_DIR)/Dependencies/ios-armv7_arm64",
 				);
 				INFOPLIST_FILE = FreeAPS/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "iAPS+Afrezza";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
