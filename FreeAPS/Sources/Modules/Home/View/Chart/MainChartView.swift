@@ -240,6 +240,7 @@ struct MainChartCanvas: View {
     @Binding var scrollTrigger: Int
 
     @State private var inspectedGlucoseIndex: Int?
+    @State private var inspectedViewportX: CGFloat?
 
     private enum Command {
         static let open = "🔴"
@@ -366,7 +367,9 @@ struct MainChartCanvas: View {
         }
         .background(
             ChartScrollGestureBridge(
-                onLongPressChanged: { contentX in
+                onLongPressChanged: { contentX, viewportX in
+                    inspectedViewportX = viewportX
+
                     let index = nearestMeasuredGlucoseIndex(to: contentX)
                     inspectedGlucoseIndex = index
 
@@ -402,7 +405,7 @@ struct MainChartCanvas: View {
                                     contentX
                             )
                     }),
-                       eventIndex < geom.afrezzaDoseDots.count
+                        eventIndex < geom.afrezzaDoseDots.count
                     {
                         print(
                             "AFREZZA MAP:",
@@ -418,6 +421,7 @@ struct MainChartCanvas: View {
                 },
                 onLongPressEnded: {
                     inspectedGlucoseIndex = nil
+                    inspectedViewportX = nil
                 }
             )
             .frame(width: 1, height: 1)
@@ -458,7 +462,10 @@ struct MainChartCanvas: View {
                         .frame(width: 1)
                         .frame(maxHeight: .infinity)
                         .position(
-                            x: min(max(dot.midX, 0), visibleWidth),
+                            x: min(
+                                max(inspectedViewportX ?? dot.midX, 0),
+                                visibleWidth
+                            ),
                             y: proxy.size.height / 2
                         )
 
@@ -482,7 +489,7 @@ struct MainChartCanvas: View {
                     )
                     .position(
                         x: min(
-                            max(dot.midX, 75),
+                            max(inspectedViewportX ?? dot.midX, 75),
                             max(75, visibleWidth - 75)
                         ),
                         y: 30
@@ -1193,7 +1200,7 @@ struct MainChartCanvas: View {
 }
 
 private struct ChartScrollGestureBridge: UIViewRepresentable {
-    let onLongPressChanged: (CGFloat) -> Void
+    let onLongPressChanged: (CGFloat, CGFloat) -> Void
     let onLongPressEnded: () -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -1224,14 +1231,14 @@ private struct ChartScrollGestureBridge: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
-        var onLongPressChanged: (CGFloat) -> Void
+        var onLongPressChanged: (CGFloat, CGFloat) -> Void
         var onLongPressEnded: () -> Void
 
         private weak var scrollView: UIScrollView?
         private weak var longPress: UILongPressGestureRecognizer?
 
         init(
-            onLongPressChanged: @escaping (CGFloat) -> Void,
+            onLongPressChanged: @escaping (CGFloat, CGFloat) -> Void,
             onLongPressEnded: @escaping () -> Void
         ) {
             self.onLongPressChanged = onLongPressChanged
@@ -1343,7 +1350,10 @@ private struct ChartScrollGestureBridge: UIViewRepresentable {
                     "offsetX =", scrollView.contentOffset.x
                 )
 
-                onLongPressChanged(locationInContent.x)
+                onLongPressChanged(
+                    locationInContent.x,
+                    locationInScroll.x - scrollView.contentOffset.x
+                )
 
             case .cancelled,
                  .ended,
