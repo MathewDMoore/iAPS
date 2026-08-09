@@ -263,6 +263,14 @@ struct MainChartCanvas: View {
         return formatter
     }()
 
+    private let inspectorTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
     var body: some View {
         ZStack {
             yGridView
@@ -490,6 +498,7 @@ struct MainChartCanvas: View {
                 ZStack {
                     xGridView
                     bolusView
+                    afrezzaDoseView
                     if data.smooth { unSmoothedGlucoseView }
                     else { connectingGlucoseLinesView }
                     glucoseView

@@ -10,6 +10,7 @@ final class OpenAPS {
     private let glucoseStorage: GlucoseStorage
     private let nightscout: NightscoutManager
     private let pumpStorage: PumpHistoryStorage
+    private let afrezzaDoseStorage: AfrezzaDoseStorage
 
     let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
 
@@ -18,12 +19,14 @@ final class OpenAPS {
         glucoseStorage: GlucoseStorage,
         nightscout: NightscoutManager,
         pumpStorage: PumpHistoryStorage,
+        afrezzaDoseStorage: AfrezzaDoseStorage,
         scriptExecutor: WebViewScriptExecutor
     ) {
         self.storage = storage
         self.glucoseStorage = glucoseStorage
         self.nightscout = nightscout
         self.pumpStorage = pumpStorage
+        self.afrezzaDoseStorage = afrezzaDoseStorage
         self.scriptExecutor = scriptExecutor
     }
 
@@ -188,6 +191,11 @@ final class OpenAPS {
                         // Update time
                         suggestion.timestamp = suggestion.deliverAt ?? clock
                         // Save
+                        self.logAfrezzaShadow(
+                            suggestion: suggestion,
+                            at: clock
+                        )
+
                         self.storage.save(suggestion, as: Enact.suggested)
 
                         promise(.success(suggestion))
@@ -1219,6 +1227,72 @@ final class OpenAPS {
             previousAutotuneResult,
             pumpProfile
         ])
+    }
+
+    private func logAfrezzaShadow(
+        suggestion: Suggestion,
+        at date: Date
+    ) {
+        let lookback = AfrezzaModelPreset.afrezza.duration
+        let events = afrezzaDoseStorage.recent(
+            since: date.addingTimeInterval(-lookback)
+        )
+
+        guard let event = events.first else {
+            debug(.openAPS, "AFREZZA SHADOW: no active inhaled insulin")
+            return
+        }
+
+        let activity = AfrezzaModelPreset.activity(
+            for: event,
+            at: date
+        )
+
+        guard activity.isActive else {
+            debug(.openAPS, "AFREZZA SHADOW: no active inhaled insulin")
+            return
+        }
+
+        let elapsedMinutes = Int(activity.elapsed / 60)
+        let remainingMinutes = Int(activity.remaining / 60)
+        let activityPercent = Int((activity.activityFraction * 100).rounded())
+
+        let phase: String
+        if activity.elapsed < AfrezzaModelPreset.afrezza.onset {
+            phase = "pre-onset"
+        } else if activity.elapsed < AfrezzaModelPreset.timeToPeak {
+            phase = "rising"
+        } else {
+            phase = "declining"
+        }
+
+        let smb = suggestion.units.map { "\($0) U" } ?? "none"
+        let insulinReq = suggestion.insulinReq.map { "\($0) U" } ?? "none"
+        let basal = suggestion.rate.map { "\($0) U/hr" } ?? "none"
+        let bg = suggestion.bg.map { "\($0) mg/dL" } ?? "unknown"
+        let iob = suggestion.iob.map { "\($0) U" } ?? "unknown"
+        let cob = suggestion.cob.map { "\($0) g" } ?? "unknown"
+        let eventualBG = suggestion.eventualBG.map(String.init) ?? "unknown"
+
+        debug(
+            .openAPS,
+            """
+            AFREZZA SHADOW — OBSERVATION ONLY
+            dose: \(event.cartridgeUnits) U
+            elapsed: \(elapsedMinutes) min
+            modeled activity: \(activityPercent)%
+            phase: \(phase)
+            remaining: \(remainingMinutes) min
+            BG: \(bg)
+            pump IOB: \(iob)
+            COB: \(cob)
+            eventual BG: \(eventualBG) mg/dL
+            insulin requirement: \(insulinReq)
+            SMB suggestion: \(smb)
+            basal suggestion: \(basal)
+            action: NONE — normal iAPS recommendation unchanged
+            """
+        )
     }
 
     private func determineBasal(

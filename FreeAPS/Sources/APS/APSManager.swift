@@ -145,6 +145,7 @@ final class BaseAPSManager: APSManager, Injectable {
             glucoseStorage: glucoseStorage,
             nightscout: nightscout,
             pumpStorage: pumpHistoryStorage,
+            afrezzaDoseStorage: resolver.resolve(AfrezzaDoseStorage.self)!,
             scriptExecutor: scriptExecutor
         )
         subscribe()
