@@ -241,6 +241,7 @@ struct MainChartCanvas: View {
 
     @State private var inspectedGlucoseIndex: Int?
     @State private var inspectedViewportX: CGFloat?
+    @State private var pinchStartHours: Int?
 
     private enum Command {
         static let open = "🔴"
@@ -422,11 +423,46 @@ struct MainChartCanvas: View {
                 onLongPressEnded: {
                     inspectedGlucoseIndex = nil
                     inspectedViewportX = nil
+                },
+                onPinchChanged: { scale in
+                    handleChartPinch(scale: scale)
+                },
+                onPinchEnded: {
+                    pinchStartHours = nil
                 }
             )
             .frame(width: 1, height: 1)
             .allowsHitTesting(false)
         )
+    }
+
+    private func handleChartPinch(scale: CGFloat) {
+        if pinchStartHours == nil {
+            pinchStartHours = data.screenHours
+        }
+
+        guard let startHours = pinchStartHours,
+              scale > 0
+        else {
+            return
+        }
+
+        // UIPinch scale > 1 means fingers spread apart:
+        // fewer visible hours = zoom in.
+        let rawHours = CGFloat(startHours) / scale
+        let newHours = min(
+            24,
+            max(
+                2,
+                Int(rawHours.rounded())
+            )
+        )
+
+        guard newHours != data.screenHours else {
+            return
+        }
+
+        data.screenHours = newHours
     }
 
     private var sortedMeasuredGlucose: [BloodGlucose] {
@@ -1202,11 +1238,15 @@ struct MainChartCanvas: View {
 private struct ChartScrollGestureBridge: UIViewRepresentable {
     let onLongPressChanged: (CGFloat, CGFloat) -> Void
     let onLongPressEnded: () -> Void
+    let onPinchChanged: (CGFloat) -> Void
+    let onPinchEnded: () -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(
             onLongPressChanged: onLongPressChanged,
-            onLongPressEnded: onLongPressEnded
+            onLongPressEnded: onLongPressEnded,
+            onPinchChanged: onPinchChanged,
+            onPinchEnded: onPinchEnded
         )
     }
 
@@ -1224,6 +1264,8 @@ private struct ChartScrollGestureBridge: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {
         context.coordinator.onLongPressChanged = onLongPressChanged
         context.coordinator.onLongPressEnded = onLongPressEnded
+        context.coordinator.onPinchChanged = onPinchChanged
+        context.coordinator.onPinchEnded = onPinchEnded
 
         DispatchQueue.main.async {
             context.coordinator.install(from: uiView)
@@ -1233,16 +1275,23 @@ private struct ChartScrollGestureBridge: UIViewRepresentable {
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         var onLongPressChanged: (CGFloat, CGFloat) -> Void
         var onLongPressEnded: () -> Void
+        var onPinchChanged: (CGFloat) -> Void
+        var onPinchEnded: () -> Void
 
         private weak var scrollView: UIScrollView?
         private weak var longPress: UILongPressGestureRecognizer?
+        private weak var pinch: UIPinchGestureRecognizer?
 
         init(
             onLongPressChanged: @escaping (CGFloat, CGFloat) -> Void,
-            onLongPressEnded: @escaping () -> Void
+            onLongPressEnded: @escaping () -> Void,
+            onPinchChanged: @escaping (CGFloat) -> Void,
+            onPinchEnded: @escaping () -> Void
         ) {
             self.onLongPressChanged = onLongPressChanged
             self.onLongPressEnded = onLongPressEnded
+            self.onPinchChanged = onPinchChanged
+            self.onPinchEnded = onPinchEnded
         }
 
         func install(from view: UIView) {
@@ -1324,8 +1373,36 @@ private struct ChartScrollGestureBridge: UIViewRepresentable {
             recognizer.delegate = self
 
             scrollView.addGestureRecognizer(recognizer)
-
             longPress = recognizer
+
+            let pinchRecognizer = UIPinchGestureRecognizer(
+                target: self,
+                action: #selector(handlePinch(_:))
+            )
+
+            pinchRecognizer.cancelsTouchesInView = false
+            pinchRecognizer.delegate = self
+            scrollView.addGestureRecognizer(pinchRecognizer)
+
+            pinch = pinchRecognizer
+        }
+
+        @objc private func handlePinch(
+            _ recognizer: UIPinchGestureRecognizer
+        ) {
+            switch recognizer.state {
+            case .began,
+                 .changed:
+                onPinchChanged(recognizer.scale)
+
+            case .cancelled,
+                 .ended,
+                 .failed:
+                onPinchEnded()
+
+            default:
+                break
+            }
         }
 
         @objc private func handleLongPress(
