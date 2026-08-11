@@ -510,11 +510,19 @@ extension Home {
                 guard let self else { return }
 
                 let start = DateFilter.day.startDate as Date
-                let end = Date()
                 let modelDuration = AfrezzaModelPreset.afrezza.duration
                 let events = afrezzaDoseStorage.recent(
                     since: start.addingTimeInterval(-modelDuration)
                 )
+
+                // Generate the complete modeled Afrezza activity curve,
+                // including its future portion through the latest dose's
+                // modeled end. This affects chart visualization only.
+                let latestModeledEnd = events
+                    .map { $0.date.addingTimeInterval(modelDuration) }
+                    .max()
+
+                let end = max(Date(), latestModeledEnd ?? Date())
 
                 let sampleInterval: TimeInterval = 5 * 60
                 var sampleDate = start
