@@ -252,18 +252,15 @@ extension DataTable {
                             .moveDisabled(true)
                     }.padding(.bottom, 1)
 
-                    // Horizontal adjustments
+                    // Meal nutrient row alignment
                     let leading: CGFloat = 28
-                    let trailing: CGFloat = -100
-                    let height: CGFloat = 15
 
                     if meal.carbs != 0 {
                         HStack(spacing: 0) {
                             Text("Carbs").frame(maxWidth: .infinity, alignment: .leading)
                             Text(item.amountText + NSLocalizedString(" g", comment: ""))
-                                .frame(maxWidth: .infinity, alignment: .trailing).offset(x: trailing)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
-                        .frame(maxHeight: height)
                         .padding(.leading, leading)
                         .foregroundStyle(.secondary)
                     }
@@ -274,9 +271,9 @@ extension DataTable {
                             Text(
                                 (hourFormatter.string(from: (meal.fat ?? 0) as NSNumber) ?? "") +
                                     NSLocalizedString(" g", comment: "")
-                            ).frame(maxWidth: .infinity, alignment: .trailing).offset(x: trailing)
+                            )
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         }
-                        .frame(maxHeight: height)
                         .padding(.leading, leading)
                         .foregroundStyle(.secondary)
                         .font(.callout)
@@ -288,9 +285,9 @@ extension DataTable {
                             Text(
                                 (hourFormatter.string(from: (meal.protein ?? 0) as NSNumber) ?? "") +
                                     NSLocalizedString(" g", comment: "")
-                            ).frame(maxWidth: .infinity, alignment: .trailing).offset(x: trailing)
+                            )
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         }
-                        .frame(maxHeight: height)
                         .padding(.leading, leading)
                         .foregroundStyle(.secondary)
                         .font(.callout)
@@ -302,9 +299,9 @@ extension DataTable {
                             Text(
                                 (hourFormatter.string(from: (meal.fiber ?? 0) as NSNumber) ?? "") +
                                     NSLocalizedString(" g", comment: "")
-                            ).frame(maxWidth: .infinity, alignment: .trailing).offset(x: trailing)
+                            )
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         }
-                        .frame(maxHeight: height)
                         .padding(.leading, leading)
                         .foregroundStyle(.secondary)
                         .font(.callout)
@@ -338,7 +335,7 @@ extension DataTable {
                                         (hourFormatter.string(from: micronutrient.value as NSNumber) ?? "") +
                                             micronutrient.unit
                                     )
-                                    .frame(maxWidth: .infinity, alignment: .trailing).offset(x: trailing)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                                 }
                                 .padding(.leading, leading)
                                 .font(.callout).foregroundStyle(.secondary)
