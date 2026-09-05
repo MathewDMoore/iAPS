@@ -461,7 +461,19 @@ final class BaseAPSManager: APSManager, Injectable {
 
         debug(.apsManager, "Enact bolus \(roundedAmout), manual \(!isSMB)")
 
+        let pumpCommandStarted = Date()
+        if !isSMB {
+            debug(.apsManager, "[BolusLatency] APSManager handing manual bolus to pump")
+        }
+
         pump.enactBolus(units: roundedAmout, automatic: isSMB).sink { completion in
+            if !isSMB {
+                debug(
+                    .apsManager,
+                    "[BolusLatency] Pump enactBolus completion after \(Date().timeIntervalSince(pumpCommandStarted)) s"
+                )
+            }
+
             if case let .failure(error) = completion {
                 warning(.apsManager, "Bolus failed with error: \(error.localizedDescription)")
                 self.processError(APSError.pumpError(error))

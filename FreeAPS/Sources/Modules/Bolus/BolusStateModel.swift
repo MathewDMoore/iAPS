@@ -269,10 +269,33 @@ extension Bolus {
 
             let maxAmount = Double(min(amount, provider.pumpSettings().maxBolus))
 
+            let bolusRequestStarted = Date()
+            debug(.apsManager, "[BolusLatency] User requested manual bolus")
+
             unlockmanager.unlock()
                 .sink { _ in } receiveValue: { [weak self] _ in
                     guard let self = self else { return }
+
+                    let authCompleted = Date()
+                    debug(
+                        .apsManager,
+                        "[BolusLatency] Authentication completed after \(authCompleted.timeIntervalSince(bolusRequestStarted)) s"
+                    )
+
+                    let saveStarted = Date()
                     self.save()
+                    let saveCompleted = Date()
+
+                    debug(
+                        .apsManager,
+                        "[BolusLatency] Pre-bolus save completed in \(saveCompleted.timeIntervalSince(saveStarted)) s"
+                    )
+
+                    debug(
+                        .apsManager,
+                        "[BolusLatency] Calling APSManager.enactBolus after \(saveCompleted.timeIntervalSince(bolusRequestStarted)) s total"
+                    )
+
                     self.apsManager.enactBolus(amount: maxAmount, isSMB: false)
                     self.showModal(for: nil)
                 }
