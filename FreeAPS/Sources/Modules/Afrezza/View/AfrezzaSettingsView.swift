@@ -8,6 +8,7 @@ struct AfrezzaSettingsView: View {
     @State private var recentDoses: [AfrezzaDoseEvent] = []
     @State private var lastLoggedSize: Int?
     @State private var activityDate = Date()
+    @State private var selectedDose: AfrezzaDoseEvent?
 
     private let doseStorage: AfrezzaDoseStorage
 
@@ -163,6 +164,10 @@ struct AfrezzaSettingsView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selectedDose = dose
+                        }
                     }
                     .onDelete(perform: deleteDoses)
                 }
@@ -186,6 +191,17 @@ struct AfrezzaSettingsView: View {
             Timer.publish(every: 60, on: .main, in: .common).autoconnect()
         ) { date in
             activityDate = date
+        }
+        .sheet(item: $selectedDose) { dose in
+            NavigationStack {
+                AfrezzaDoseDetailView(
+                    dose: dose,
+                    doseStorage: doseStorage
+                ) {
+                    reloadDoses()
+                    activityDate = Date()
+                }
+            }
         }
     }
 
@@ -278,5 +294,97 @@ struct AfrezzaSettingsView: View {
         }
 
         prefs.cartridgeSizes.removeAll { valuesToDelete.contains($0) }
+    }
+}
+
+private struct AfrezzaDoseDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let dose: AfrezzaDoseEvent
+    let doseStorage: AfrezzaDoseStorage
+    let onChanged: () -> Void
+
+    @State private var editedDate: Date
+
+    init(
+        dose: AfrezzaDoseEvent,
+        doseStorage: AfrezzaDoseStorage,
+        onChanged: @escaping () -> Void
+    ) {
+        self.dose = dose
+        self.doseStorage = doseStorage
+        self.onChanged = onChanged
+        _editedDate = State(initialValue: dose.date)
+    }
+
+    var body: some View {
+        Form {
+            Section("Dose") {
+                LabeledContent("Cartridge", value: "\(dose.cartridgeUnits) U")
+                LabeledContent("Source", value: dose.source.rawValue.capitalized)
+                LabeledContent("Event ID", value: dose.id)
+            }
+
+            Section("Date and time") {
+                DatePicker(
+                    "Dose time",
+                    selection: $editedDate,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+            }
+
+            if let note = dose.note, !note.isEmpty {
+                Section("Note") {
+                    Text(note)
+                }
+            }
+
+            Section {
+                Button("Save corrected time") {
+                    let corrected = AfrezzaDoseEvent(
+                        id: dose.id,
+                        date: editedDate,
+                        cartridgeUnits: dose.cartridgeUnits,
+                        source: dose.source,
+                        note: dose.note
+                    )
+
+                    doseStorage.store(corrected)
+                    onChanged()
+                    dismiss()
+                }
+                .disabled(editedDate == dose.date)
+            } footer: {
+                Text(
+                    "Saving keeps the existing Afrezza event ID and updates its timestamp. "
+                        + "The activity display is recalculated from the corrected time. "
+                        + "This does not initiate or alter pump insulin delivery."
+                )
+            }
+
+            Section {
+                Button(role: .destructive) {
+                    doseStorage.delete(id: dose.id)
+                    onChanged()
+                    dismiss()
+                } label: {
+                    Text("Delete Afrezza dose")
+                }
+            } footer: {
+                Text(
+                    "Deletes only this manually recorded Afrezza event. "
+                        + "It does not initiate, cancel, or modify insulin delivery."
+                )
+            }
+        }
+        .navigationTitle("Afrezza Dose")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close") {
+                    dismiss()
+                }
+            }
+        }
     }
 }
