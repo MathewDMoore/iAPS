@@ -407,7 +407,13 @@ extension DataTable {
                             isRemoveHistoryItemAlertPresented = true
                         }
                     ).tint(.red)
-                }.disabled(item.type == .tempBasal || item.type == .tempTarget || item.type == .resume || item.type == .suspend)
+                }.disabled(
+                    item.type == .afrezza ||
+                        item.type == .tempBasal ||
+                        item.type == .tempTarget ||
+                        item.type == .resume ||
+                        item.type == .suspend
+                )
                 .alert(
                     Text(NSLocalizedString(alertTitle, comment: "")),
                     isPresented: $isRemoveHistoryItemAlertPresented

@@ -23,6 +23,7 @@ enum DataTable {
     enum DataType: String, Equatable {
         case carbs
         case bolus
+        case afrezza
         case tempBasal
         case tempTarget
         case suspend
@@ -34,6 +35,8 @@ enum DataTable {
                 return NSLocalizedString("Carbs", comment: "Treatment type")
             case .bolus:
                 return NSLocalizedString("Bolus", comment: "Treatment type")
+            case .afrezza:
+                return NSLocalizedString("Afrezza", comment: "Treatment type")
             case .tempBasal:
                 return NSLocalizedString("Temp Basal", comment: "Treatment type")
             case .tempTarget:
@@ -147,6 +150,9 @@ enum DataTable {
 
                 return numberFormatter
                     .string(from: amount as NSNumber) ?? "" + NSLocalizedString(" U", comment: "Insulin unit") + bolusText
+            case .afrezza:
+                return (numberFormatter.string(from: amount as NSNumber) ?? "") +
+                    NSLocalizedString(" U inhaled", comment: "Afrezza cartridge units")
             case .tempBasal:
                 return numberFormatter
                     .string(from: amount as NSNumber) ?? "" + NSLocalizedString(" U/hr", comment: "Unit insulin per hour")
@@ -178,6 +184,8 @@ enum DataTable {
                 return .loopYellow
             case .bolus:
                 return Color.insulin
+            case .afrezza:
+                return .cyan
             case .tempBasal:
                 return Color.insulin.opacity(0.4)
             case .resume,
