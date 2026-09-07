@@ -393,13 +393,14 @@ extension DataTable {
                             if item.type == .carbs {
                                 alertTitle = "Delete Carbs?"
                                 alertMessage = dateFormatter.string(from: item.date) + ", " + item.amountText
+                            } else if item.type == .afrezza {
+                                alertTitle = "Delete Afrezza?"
+                                alertMessage = dateFormatter.string(from: item.date) + ", " + item.amountText
                             } else {
-                                // item is insulin treatment; item.type == .bolus
                                 alertTitle = "Delete Insulin?"
                                 alertMessage = dateFormatter.string(from: item.date) + ", " + item.amountText
 
                                 if item.isSMB ?? false {
-                                    // Add text snippet, so that alert message is more descriptive for SMBs
                                     alertMessage += "SMB"
                                 }
                             }
@@ -408,8 +409,7 @@ extension DataTable {
                         }
                     ).tint(.red)
                 }.disabled(
-                    item.type == .afrezza ||
-                        item.type == .tempBasal ||
+                    item.type == .tempBasal ||
                         item.type == .tempTarget ||
                         item.type == .resume ||
                         item.type == .suspend
@@ -427,6 +427,8 @@ extension DataTable {
 
                         if treatmentToDelete.type == .carbs {
                             state.deleteCarbs(treatmentToDelete, storage: filtered(id: treatmentToDelete.id))
+                        } else if treatmentToDelete.type == .afrezza {
+                            state.afrezzaDoseStorage.delete(id: treatmentToDelete.id)
                         } else {
                             state.deleteInsulin(treatmentToDelete)
                         }

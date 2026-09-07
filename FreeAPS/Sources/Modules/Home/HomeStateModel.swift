@@ -511,6 +511,17 @@ extension Home {
             }
         }
 
+        func logAfrezza(_ cartridgeUnits: Int) {
+            guard cartridgeUnits > 0 else { return }
+
+            let event = AfrezzaDoseEvent(
+                cartridgeUnits: cartridgeUnits,
+                source: .quickAction
+            )
+
+            afrezzaDoseStorage.store(event)
+        }
+
         private func setupAfrezzaActivity() {
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
