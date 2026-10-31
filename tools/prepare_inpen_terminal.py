@@ -16,6 +16,17 @@ def git(repo, *args, **kwargs):
     return subprocess.run(['git', '-C', str(repo), *args], check=True, **kwargs)
 
 
+def resolve_repo(requested):
+    repo = Path(requested).expanduser().resolve()
+    root = Path(git(repo, 'rev-parse', '--show-toplevel', capture_output=True, text=True).stdout.strip())
+    # APFS commonly ignores case; pathlib string equality does not.
+    if not root.samefile(repo):
+        raise RuntimeError('Run from the iAPS Git root. Detected Git root: ' + str(root))
+    if not (root / 'FreeAPS.xcodeproj' / 'project.pbxproj').is_file():
+        raise RuntimeError('FreeAPS.xcodeproj/project.pbxproj was not found in ' + str(root))
+    return root.resolve()
+
+
 def apply_checked(repo, patch):
     """Check the entire patch before touching source; no stash/reset/index mutation."""
     check = subprocess.run(['git', '-C', str(repo), 'apply', '--check', str(patch)],
@@ -37,10 +48,7 @@ def main():
     if platform.system() != 'Darwin':
         raise RuntimeError('Run this helper in Terminal on your Mac.')
     os.umask(0o077)
-    repo = Path(args.repo).expanduser().resolve()
-    root = git(repo, 'rev-parse', '--show-toplevel', capture_output=True, text=True).stdout.strip()
-    if Path(root).resolve() != repo or not (repo / 'FreeAPS.xcodeproj').is_dir():
-        raise RuntimeError('This is not the expected iAPS project folder.')
+    repo = resolve_repo(args.repo)
     if git(repo, 'ls-files', '-u', capture_output=True).stdout:
         raise RuntimeError('An existing merge has unresolved files. Nothing changed.')
     git(repo, 'cat-file', '-e', DRAFT + '^{commit}')
