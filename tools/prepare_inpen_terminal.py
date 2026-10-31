@@ -180,9 +180,71 @@ def apply_with_current_project(repo, patch, result):
     return status
 
 
+def select_scheme(schemes):
+    for name in ('FreeAPS', 'FreeAPSWorkspace', 'iAPS'):
+        if name in schemes:
+            return name
+    raise RuntimeError('No recognized app scheme was found. Available schemes: ' + ', '.join(schemes))
+
+
+def discover_scheme(repo, result):
+    print('Reading the schemes available in your workspace...', flush=True)
+    listed = subprocess.run(['xcodebuild', '-workspace', 'FreeAPS.xcworkspace', '-list', '-json'],
+                            cwd=repo, capture_output=True, text=True)
+    (result / 'workspace-schemes.log').write_text(listed.stdout + '\n' + listed.stderr)
+    if listed.returncode:
+        raise RuntimeError('Could not list workspace schemes. See ' + str(result / 'workspace-schemes.log'))
+    # Package-resolution messages can precede xcodebuild's JSON payload.
+    decoder = json.JSONDecoder()
+    for match in re.finditer(r'\{', listed.stdout):
+        try:
+            payload, _ = decoder.raw_decode(listed.stdout[match.start():])
+        except ValueError:
+            continue
+        if isinstance(payload, dict) and isinstance(payload.get('workspace'), dict):
+            schemes = payload['workspace'].get('schemes', [])
+            return select_scheme(schemes)
+    raise RuntimeError('Workspace schemes could not be decoded. See ' + str(result / 'workspace-schemes.log'))
+
+
+def run_build(repo, result, status, retry=False):
+    suffix = '-retry-' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') if retry else ''
+    log = result / ('build' + suffix + '.log')
+    try:
+        scheme = discover_scheme(repo, result)
+    except RuntimeError as error:
+        (result / 'RESULT.txt').write_text(str(error) + '\nNo source files were changed by this build attempt.\n')
+        print(str(error), flush=True)
+        return 2
+    print('Using workspace scheme: ' + scheme, flush=True)
+    print('Running an unsigned build check; this can take several minutes.', flush=True)
+    print('Build log: ' + str(log), flush=True)
+    with log.open('w') as output:
+        build = subprocess.run([
+            'xcodebuild', '-workspace', 'FreeAPS.xcworkspace', '-scheme', scheme,
+            '-configuration', 'Debug', '-destination', 'generic/platform=iOS',
+            '-derivedDataPath', str(result / 'DerivedData'), 'CODE_SIGNING_ALLOWED=NO', 'build'
+        ], cwd=repo, stdout=output, stderr=subprocess.STDOUT)
+    summary = 'BUILD CHECK PASSED' if build.returncode == 0 else 'BUILD CHECK NEEDS REVIEW'
+    details = [summary, 'Source draft: ' + status, 'Workspace scheme: ' + scheme,
+               'Backup/results: ' + str(result), 'Phone app was not installed or replaced.',
+               'MetabolicTwin locations: ' + str(result / 'MetabolicTwin-locations.txt'),
+               'Build log: ' + str(log)]
+    if build.returncode:
+        lines = log.read_text(errors='replace').splitlines()
+        errors = [line for line in lines if 'error:' in line or 'BUILD FAILED' in line]
+        details += errors[:15] if errors else lines[-15:]
+    (result / 'RESULT.txt').write_text('\n'.join(details) + '\n')
+    print('\n'.join(details), flush=True)
+    print('When convenient, share RESULT.txt and MetabolicTwin-locations.txt.', flush=True)
+    return build.returncode
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', default=str(Path.home() / 'iAPS'))
+    parser.add_argument('--build-only', action='store_true', help='Retry compilation without applying source changes')
+    parser.add_argument('--results', type=Path, help='Existing backup/results folder for a build retry')
     args = parser.parse_args()
     if platform.system() != 'Darwin':
         raise RuntimeError('Run this helper in Terminal on your Mac.')
@@ -190,6 +252,17 @@ def main():
     repo = resolve_repo(args.repo)
     if git(repo, 'ls-files', '-u', capture_output=True).stdout:
         raise RuntimeError('An existing merge has unresolved files. Nothing changed.')
+    if args.build_only:
+        if args.results is None or not args.results.expanduser().is_dir():
+            raise RuntimeError('--build-only requires the existing --results folder.')
+        if not all((repo / 'FreeAPS/Sources/Modules/ExternalInsulin' / name).is_file() for name in SOURCE_FILES):
+            raise RuntimeError('The external insulin source draft is not fully applied; no build was attempted.')
+        project = repo / 'FreeAPS.xcodeproj/project.pbxproj'
+        text = project.read_text()
+        proposed, _ = plan_project(text, read_project(project))
+        if proposed != text:
+            raise RuntimeError('External insulin project references are incomplete; no source changes were made.')
+        return run_build(repo, args.results.expanduser().resolve(), 'already applied (build retry)', retry=True)
     git(repo, 'cat-file', '-e', DRAFT + '^{commit}')
     stamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
     result = Path.home() / 'Desktop' / ('iAPS-InPen-' + stamp)
@@ -218,28 +291,7 @@ def main():
     print('Draft ' + status + '. Your existing branch and local changes are preserved.', flush=True)
     locations = subprocess.run(['mdfind', '-name', 'MetabolicTwin'], capture_output=True, text=True)
     (result / 'MetabolicTwin-locations.txt').write_text(locations.stdout)
-    log = result / 'build.log'
-    print('Running an unsigned build check; this can take several minutes.', flush=True)
-    print('Build log: ' + str(log), flush=True)
-    with log.open('w') as output:
-        build = subprocess.run([
-            'xcodebuild', '-workspace', 'FreeAPS.xcworkspace', '-scheme', 'FreeAPS',
-            '-configuration', 'Debug', '-destination', 'generic/platform=iOS',
-            '-derivedDataPath', str(result / 'DerivedData'), 'CODE_SIGNING_ALLOWED=NO', 'build'
-        ], cwd=repo, stdout=output, stderr=subprocess.STDOUT)
-    summary = ('BUILD CHECK PASSED' if build.returncode == 0 else 'BUILD CHECK NEEDS REVIEW')
-    details = [summary, 'Source draft: ' + status, 'Backup/results: ' + str(result),
-               'Phone app was not installed or replaced.',
-               'MetabolicTwin locations: ' + str(result / 'MetabolicTwin-locations.txt'),
-               'Build log: ' + str(log)]
-    if build.returncode:
-        lines = log.read_text(errors='replace').splitlines()
-        errors = [line for line in lines if 'error:' in line or 'BUILD FAILED' in line]
-        details += errors[:15] if errors else lines[-15:]
-    (result / 'RESULT.txt').write_text('\n'.join(details) + '\n')
-    print('\n'.join(details), flush=True)
-    print('When convenient, share RESULT.txt and MetabolicTwin-locations.txt.', flush=True)
-    return build.returncode
+    return run_build(repo, result, status)
 
 
 if __name__ == '__main__':
