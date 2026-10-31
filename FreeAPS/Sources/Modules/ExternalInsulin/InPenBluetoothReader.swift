@@ -4,7 +4,7 @@ import Foundation
 
 /// Experimental receive-only history reader for an InPen already authorized on this iPhone.
 /// No insulin-delivery commands exist in this class. Manufacturer pairing is not implemented.
-@MainActor final class InPenBluetoothReader: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+@MainActor final class InPenBluetoothReader: NSObject, ObservableObject, @preconcurrency CBCentralManagerDelegate, @preconcurrency CBPeripheralDelegate {
     static let shared = InPenBluetoothReader()
     struct NearbyPen: Identifiable {
         let id: UUID
