@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Preserve a Mac checkout, apply the reviewed draft, and build without installing."""
 import argparse
+import copy
+import hashlib
+import json
+import re
+import shutil
+import tempfile
 import datetime
 import os
 from pathlib import Path
@@ -41,6 +47,139 @@ def apply_checked(repo, patch):
     return 'applied'
 
 
+SOURCE_FILES = (
+    'ExternalInsulinRecord.swift', 'ExternalInsulinStore.swift', 'ExternalInsulinView.swift',
+    'InPenBluetoothReader.swift', 'InPenRecordDecoder.swift',
+)
+
+
+def read_project(path):
+    parsed = subprocess.run(['plutil', '-convert', 'json', '-o', '-', str(path)],
+                            capture_output=True, text=True)
+    if parsed.returncode:
+        raise RuntimeError('Could not verify Xcode project: ' + (parsed.stderr or parsed.stdout).strip())
+    return json.loads(parsed.stdout)
+
+
+def add_array_entries(text, object_id, key, entries):
+    if not entries:
+        return text
+    # Xcode object blocks close at the same indentation as their object identifier.
+    pattern = r'(?ms)^([ \t]*)' + re.escape(object_id) + r'\b[^\n]*=\s*\{\n.*?^\1\};'
+    match = re.search(pattern, text)
+    if not match:
+        raise RuntimeError('Cannot locate Xcode object ' + object_id + '; nothing was applied.')
+    block = match.group(0)
+    array = re.search(r'(?m)^([ \t]*)' + re.escape(key) + r'\s*=\s*\(\s*\n', block)
+    if not array:
+        raise RuntimeError('Cannot locate Xcode ' + key + ' list; nothing was applied.')
+    insert = ''.join(array.group(1) + '\t' + entry + ',\n' for entry in entries)
+    block = block[:array.end()] + insert + block[array.end():]
+    return text[:match.start()] + block + text[match.end():]
+
+
+def plan_project(text, before):
+    """Add only new source references to the current app target; keep other objects intact."""
+    expected = copy.deepcopy(before)
+    objects = expected['objects']
+    targets = [obj for obj in objects.values()
+               if obj.get('isa') == 'PBXNativeTarget' and obj.get('name') == 'FreeAPS'
+               and obj.get('productType') == 'com.apple.product-type.application']
+    if len(targets) != 1:
+        raise RuntimeError('Cannot uniquely identify the FreeAPS app target; nothing was applied.')
+    phases = [key for key in targets[0]['buildPhases']
+              if objects[key].get('isa') == 'PBXSourcesBuildPhase']
+    if len(phases) != 1:
+        raise RuntimeError('Cannot uniquely identify the app source phase; nothing was applied.')
+    phase_id = phases[0]
+    group_id = objects[expected['rootObject']]['mainGroup']
+    if objects[group_id].get('isa') != 'PBXGroup':
+        raise RuntimeError('Unsupported Xcode main group; nothing was applied.')
+    new_refs, new_builds, group_entries, phase_entries = [], [], [], []
+    for name in SOURCE_FILES:
+        path = 'FreeAPS/Sources/Modules/ExternalInsulin/' + name
+        refs = [key for key, obj in objects.items()
+                if obj.get('isa') == 'PBXFileReference' and obj.get('path') == path]
+        if len(refs) > 1:
+            raise RuntimeError('Duplicate Xcode source references for ' + name + '; nothing was applied.')
+        if refs:
+            fid = refs[0]
+        else:
+            # Fail on a differently grouped source with the same name rather than guessing its path.
+            if any(obj.get('isa') == 'PBXFileReference' and
+                   (obj.get('name') == name or str(obj.get('path', '')).endswith('/' + name)
+                    or obj.get('path') == name) for obj in objects.values()):
+                raise RuntimeError('An existing Xcode reference for ' + name + ' needs review; nothing was applied.')
+            fid = hashlib.sha1(('external-ref-' + name).encode()).hexdigest()[:24].upper()
+            if fid in objects:
+                raise RuntimeError('Xcode identifier collision; nothing was applied.')
+            objects[fid] = dict(isa='PBXFileReference', lastKnownFileType='sourcecode.swift',
+                                name=name, path=path, sourceTree='<group>')
+            new_refs.append('\t\t' + fid + ' /* ' + name + ' */ = {isa = PBXFileReference; '
+                            'lastKnownFileType = sourcecode.swift; name = ' + name + '; path = ' + path +
+                            '; sourceTree = "<group>"; };\n')
+        if fid not in objects[group_id]['children']:
+            objects[group_id]['children'].insert(0, fid)
+            group_entries.insert(0, fid + ' /* ' + name + ' */')
+        matching = [key for key in objects[phase_id]['files'] if objects[key].get('fileRef') == fid]
+        if len(matching) > 1:
+            raise RuntimeError('Duplicate app source build entries; nothing was applied.')
+        if not matching:
+            bid = hashlib.sha1(('external-build-' + name).encode()).hexdigest()[:24].upper()
+            if bid in objects:
+                if objects[bid] != dict(isa='PBXBuildFile', fileRef=fid):
+                    raise RuntimeError('Xcode build identifier collision; nothing was applied.')
+            else:
+                objects[bid] = dict(isa='PBXBuildFile', fileRef=fid)
+                new_builds.append('\t\t' + bid + ' /* ' + name + ' in Sources */ = {isa = PBXBuildFile; '
+                                  'fileRef = ' + fid + ' /* ' + name + ' */; };\n')
+            objects[phase_id]['files'].insert(0, bid)
+            phase_entries.insert(0, bid + ' /* ' + name + ' in Sources */')
+    for section, entries in [('PBXFileReference', new_refs), ('PBXBuildFile', new_builds)]:
+        if entries:
+            marker = '/* Begin ' + section + ' section */\n'
+            if text.count(marker) != 1:
+                raise RuntimeError('Unsupported Xcode project formatting; nothing was applied.')
+            text = text.replace(marker, marker + ''.join(entries), 1)
+    text = add_array_entries(text, group_id, 'children', group_entries)
+    text = add_array_entries(text, phase_id, 'files', phase_entries)
+    return text, expected
+
+
+def apply_with_current_project(repo, patch, result):
+    project = repo / 'FreeAPS.xcodeproj' / 'project.pbxproj'
+    original = project.read_bytes()
+    proposed, expected = plan_project(original.decode(), read_project(project))
+    prepared = result / 'proposed-project.pbxproj'
+    prepared.write_text(proposed)
+    if read_project(prepared) != expected:
+        raise RuntimeError('Project verification failed; nothing was applied.')
+    if project.read_bytes() != original:
+        raise RuntimeError('The Xcode project changed during preparation; nothing was applied.')
+    # Keep the project formatting and all original objects; only the verified references are added.
+    status = apply_checked(repo, patch)
+    if proposed.encode() != original:
+        tmp = None
+        try:
+            with tempfile.NamedTemporaryFile(dir=project.parent, delete=False) as output:
+                tmp = Path(output.name)
+                output.write(proposed.encode())
+                output.flush()
+                os.fsync(output.fileno())
+            shutil.copymode(project, tmp)
+            if project.read_bytes() != original:
+                raise RuntimeError('The Xcode project changed before the write.')
+            os.replace(tmp, project)
+        except (OSError, RuntimeError):
+            if tmp is not None:
+                tmp.unlink(missing_ok=True)
+            if status == 'applied':
+                git(repo, 'apply', '--reverse', '--check', str(patch))
+                git(repo, 'apply', '--reverse', str(patch))
+            raise RuntimeError('Project update stopped; the source patch was rolled back. Backup: ' + str(result))
+    return status
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', default=str(Path.home() / 'iAPS'))
@@ -67,10 +206,11 @@ def main():
                     '--exclude=./.build', '-C', str(repo), '.'], check=True)
     patch = result / 'reviewed-inpen-draft.patch'
     with patch.open('wb') as output:
-        git(repo, 'diff', '--binary', BASE, DRAFT, stdout=output)
+        git(repo, 'diff', '--binary', BASE, DRAFT, '--', '.',
+            ':(exclude)FreeAPS.xcodeproj/project.pbxproj', stdout=output)
     try:
-        status = apply_checked(repo, patch)
-    except RuntimeError as error:
+        status = apply_with_current_project(repo, patch, result)
+    except (RuntimeError, subprocess.CalledProcessError) as error:
         (result / 'RESULT.txt').write_text(str(error) + '\nBackup: ' + str(result) + '\n')
         print(str(error), flush=True)
         print('Send RESULT.txt when convenient: ' + str(result / 'RESULT.txt'), flush=True)

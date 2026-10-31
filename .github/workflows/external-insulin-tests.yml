@@ -19,6 +19,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Check preservation of newer local Xcode projects
+        run: python3 -m unittest discover -s tools -p 'test_prepare_inpen_terminal.py' -v
       - name: Compile Bluetooth reader and test history
         run: swift test
       - name: Type-check the iPhone screen and Bluetooth reader
