@@ -90,6 +90,9 @@ extension Settings {
 
                     Section {
                         Text("Afrezza").navigationLink(to: .afrezza, from: self)
+                        NavigationLink("External insulin / InPen") {
+                            ExternalInsulinView(afrezzaStorage: resolver.resolve(AfrezzaDoseStorage.self))
+                        }
                         Text("App Icons").navigationLink(to: .iconConfig, from: self)
                         Text("Auto ISF").navigationLink(to: .autoISF, from: self)
                         Text("Bolus Calculator").navigationLink(to: .bolusCalculatorConfig, from: self)

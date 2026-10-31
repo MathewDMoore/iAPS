@@ -1,0 +1,19 @@
+name: External insulin history checks
+on:
+  push:
+    branches: [work/inpen-history-bluetooth]
+  pull_request:
+    paths:
+      - 'FreeAPS/Sources/Modules/ExternalInsulin/**'
+      - 'Tests/ExternalInsulinTests/**'
+      - 'Package.swift'
+      - '.github/workflows/external-insulin-tests.yml'
+permissions:
+  contents: read
+jobs:
+  history-and-bluetooth:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Bluetooth reader and test history
+        run: swift test
