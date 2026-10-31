@@ -1,0 +1,41 @@
+name: External insulin history checks
+on:
+  push:
+    branches: [work/inpen-history-bluetooth]
+  pull_request:
+    paths:
+      - 'FreeAPS/Sources/Modules/ExternalInsulin/**'
+      - 'Tests/ExternalInsulinTests/**'
+      - 'Package.swift'
+      - '.github/workflows/external-insulin-tests.yml'
+permissions:
+  contents: read
+concurrency:
+  group: external-insulin-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  history-and-bluetooth:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check preservation of newer local Xcode projects
+        run: python3 -m unittest discover -s tools -p 'test_prepare_inpen_terminal.py' -v
+      - name: Compile Bluetooth reader and test history
+        run: swift test
+      - name: Type-check the iPhone screen and Bluetooth reader
+        run: |
+          cat > "$RUNNER_TEMP/AfrezzaHistoryInterface.swift" <<'SWIFT'
+          import Foundation
+          protocol JSON: Codable {}
+          // Existing storage's read-only interface; no alternate implementation.
+          protocol AfrezzaDoseStorage {
+              func all() -> [AfrezzaDoseEvent]
+          }
+          SWIFT
+          xcrun --sdk iphonesimulator swiftc -typecheck -swift-version 5 \
+            -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
+            -target arm64-apple-ios17.0-simulator \
+            FreeAPS/Sources/Modules/ExternalInsulin/*.swift \
+            FreeAPS/Sources/Models/AfrezzaDoseEvent.swift \
+            "$RUNNER_TEMP/AfrezzaHistoryInterface.swift"

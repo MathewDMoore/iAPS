@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		37696304CA4ACE1DFBE1192B /* InPenRecordDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E06963D879A047D7AF153046 /* InPenRecordDecoder.swift */; };
+		A6CBFD7C27F0FCAA2F352167 /* InPenBluetoothReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9F6CE137E7621B465B3DF93 /* InPenBluetoothReader.swift */; };
+		E37DC0E403FF3FBA6965A7D2 /* ExternalInsulinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 473DAAD360ED14E7D4BFC7EA /* ExternalInsulinView.swift */; };
+		04655F4D1821DA3AA9E370B7 /* ExternalInsulinStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4742A14EB7B206F2AB7FEBA0 /* ExternalInsulinStore.swift */; };
+		9D979800996C4F46AF0303A4 /* ExternalInsulinRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63807E8F08C8E4F922CF2F7F /* ExternalInsulinRecord.swift */; };
 		AFA000033020260400000003 /* AfrezzaModelPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A81300F439500685AE2 /* AfrezzaModelPreset.swift */; };
 		AFA000023020260300000002 /* AfrezzaPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A80300F438A00685AE2 /* AfrezzaPreferences.swift */; };
 		AFA000013020260300000001 /* AfrezzaSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E09B0A83300F43CB00685AE2 /* AfrezzaSettingsView.swift */; };
@@ -619,6 +624,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E06963D879A047D7AF153046 /* InPenRecordDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InPenRecordDecoder.swift; path = FreeAPS/Sources/Modules/ExternalInsulin/InPenRecordDecoder.swift; sourceTree = "<group>"; };
+		A9F6CE137E7621B465B3DF93 /* InPenBluetoothReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = InPenBluetoothReader.swift; path = FreeAPS/Sources/Modules/ExternalInsulin/InPenBluetoothReader.swift; sourceTree = "<group>"; };
+		473DAAD360ED14E7D4BFC7EA /* ExternalInsulinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExternalInsulinView.swift; path = FreeAPS/Sources/Modules/ExternalInsulin/ExternalInsulinView.swift; sourceTree = "<group>"; };
+		4742A14EB7B206F2AB7FEBA0 /* ExternalInsulinStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExternalInsulinStore.swift; path = FreeAPS/Sources/Modules/ExternalInsulin/ExternalInsulinStore.swift; sourceTree = "<group>"; };
+		63807E8F08C8E4F922CF2F7F /* ExternalInsulinRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ExternalInsulinRecord.swift; path = FreeAPS/Sources/Modules/ExternalInsulin/ExternalInsulinRecord.swift; sourceTree = "<group>"; };
 		0274EE6439B1C3ED70730D41 /* PumpSettingsEditorDataFlow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PumpSettingsEditorDataFlow.swift; sourceTree = "<group>"; };
 		056EB47D2B4C8B3D00CDE36E /* SystemSoundsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSoundsManager.swift; sourceTree = "<group>"; };
 		0CA3E609094E064C99A4752C /* PreferencesEditorStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PreferencesEditorStateModel.swift; sourceTree = "<group>"; };
@@ -2123,6 +2133,11 @@
 				E09B0A81300F439500685AE2 /* AfrezzaModelPreset.swift */,
 				E09B0A82300F439D00685AE2 /* AfrezzaQuickActionsView.swift */,
 				E09B0A83300F43CB00685AE2 /* AfrezzaSettingsView.swift */,
+				E06963D879A047D7AF153046 /* InPenRecordDecoder.swift */,
+				A9F6CE137E7621B465B3DF93 /* InPenBluetoothReader.swift */,
+				473DAAD360ED14E7D4BFC7EA /* ExternalInsulinView.swift */,
+				4742A14EB7B206F2AB7FEBA0 /* ExternalInsulinStore.swift */,
+				63807E8F08C8E4F922CF2F7F /* ExternalInsulinRecord.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -3412,6 +3427,11 @@
 				AFA000033020260400000003 /* AfrezzaModelPreset.swift in Sources */,
 				AFA000023020260300000002 /* AfrezzaPreferences.swift in Sources */,
 				AFA000013020260300000001 /* AfrezzaSettingsView.swift in Sources */,
+				37696304CA4ACE1DFBE1192B /* InPenRecordDecoder.swift in Sources */,
+				A6CBFD7C27F0FCAA2F352167 /* InPenBluetoothReader.swift in Sources */,
+				E37DC0E403FF3FBA6965A7D2 /* ExternalInsulinView.swift in Sources */,
+				04655F4D1821DA3AA9E370B7 /* ExternalInsulinStore.swift in Sources */,
+				9D979800996C4F46AF0303A4 /* ExternalInsulinRecord.swift in Sources */,
 				3811DE2325C9D48300A708ED /* MainDataFlow.swift in Sources */,
 				F2E8D14D2F09616A0097F482 /* TimePickerSheet.swift in Sources */,
 				3811DEEB25CA063400A708ED /* Persisted.swift in Sources */,
