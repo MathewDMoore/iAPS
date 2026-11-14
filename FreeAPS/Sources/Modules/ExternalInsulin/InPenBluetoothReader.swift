@@ -264,7 +264,10 @@ import Foundation
     private func armTimeout() {
         timeout?.invalidate()
         timeout = Timer.scheduledTimer(withTimeInterval: 45, repeats: false) { [weak self] _ in
-            Task { @MainActor in self?.fail("InPen sync timed out. History may be incomplete; received records are preserved.") }
+            Task { @MainActor in
+                guard let self, self.enabled, self.timeout?.isValid == false else { return }
+                self.fail("InPen timed out during: \(self.status). Any records already received were kept.")
+            }
         }
     }
 
