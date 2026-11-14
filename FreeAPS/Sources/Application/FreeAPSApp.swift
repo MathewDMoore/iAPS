@@ -48,6 +48,7 @@ import Swinject
                 .environmentObject(Icons())
                 .onOpenURL(perform: handleURL)
                 .environmentObject(appServices)
+                .onAppear { InPenBluetoothReader.shared.resumeIfEnabled() }
         }
         .onChange(of: scenePhase) {
             debug(.default, "APPLICATION PHASE: \(scenePhase)")
