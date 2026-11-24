@@ -135,22 +135,16 @@ extension Home {
                 sensordays: $state.sensorDays,
                 timerDate: $state.data.timerDate
             )
-            .onTapGesture {
-                if state.alarm == nil {
-                    state.openCGM()
-                } else {
-                    state.showModal(for: .snooze)
-                }
-            }
-            .onLongPressGesture {
-                let impactHeavy = UIImpactFeedbackGenerator(style: .heavy)
-                impactHeavy.impactOccurred()
-                if state.alarm == nil {
-                    state.showModal(for: .snooze)
-                } else {
-                    state.openCGM()
-                }
-            }
+            .gesture(
+                LongPressGesture()
+                    .onEnded { _ in
+                        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                        state.showModal(for: .snooze)
+                    }
+                    .exclusively(before: TapGesture().onEnded {
+                        state.openCGM()
+                    })
+            )
         }
 
         var pumpView: some View {
